@@ -96,3 +96,22 @@ Si queremos llegar a la FEC es partir por FRP.
 - Control estadístico: relevante pues si no se hacen estimaciones sesgadas.
 
 ![](img/02clase1.jpg)
+
+## Clase 3
+
+ Utilizamos MCO para reducir los residuos, entonces minimizamos la suma cuadrada de los residuos.
+
+## Clase 4
+
+### Propiedades alegbraicas de MCO
+
+Las propiedades agebraicas se derivan de las llamadas ecuaciones normales para MCO.
+
+1. La suma de residuos da cero pues el MCO está optimizado para ello.
+
+
+**R cuadrado**
+Corresponde a la proporcion de la variación muestral de y que es explicada por la regresión de MCO.
+
+
+Implicitamente con MCO **maximizamos** R cudradado, al intentar minimizar *SCT* en relación a los *SCE*. Entre más parecidos sea SCE y SCT, mayor va a ser el ajuste o el R cuadrado.
