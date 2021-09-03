@@ -115,3 +115,92 @@ Corresponde a la proporcion de la variación muestral de y que es explicada por 
 
 
 Implicitamente con MCO **maximizamos** R cudradado, al intentar minimizar *SCT* en relación a los *SCE*. Entre más parecidos sea SCE y SCT, mayor va a ser el ajuste o el R cuadrado.
+
+## Clase 5
+
+### Supuestos de la Regresión Lineal
+
+#### Linealidad
+
+La relación poblacional entre las variables sigue un modelo lineal
+
+Se puede escribir como la suma entre una variable y un escalar. El modelo es lineal entre los parámetros, pero eso no significa que las relaciones sean lineales.
+
+
+Diferencia entre relación lineal de parámetros y efectos lineales
+
+¿Cómo mantener una estructura de relación entre variables si las variables no tienen una relación lineal con el predictor?
+
+Si no está lineal, hay que linealizarlo. Por ejemplo Cobb Douglas que está en exponentes, la forma de linealizarlo sería con un logaritmo.
+
+Por ello, se pueden hacer cambios.
+
+#### Muestreo aleatorio
+
+la observaciónes provienen de una muestra aleatoria de la población.
+
+Esto significa que las observaciones son independientes:
+$$cov (u_i, u_j | X) = 0, para todo i distinto j$$
+
+En una serie de tiempo podríamos encontrar un problema de autocorrelación serial.
+
+Q: ¿Se podrá estimar la regresión o no, si hay muestreo por cuotas?
+
+#### Colinealidad imperfecta
+
+No hay relaciones lineales exactas entre variables independientes
+
+En la realidad están correlacionadas las variables, pero no perfectamente correlacionadas. Ejemplo del gasto en profesor y gasto en no profesores (pero no el gasto total).
+
+En otras palabras, **X tiene rango completo**, por eso es invertible y definida positiva. Si X'X no fuera invertible, no sería estimable (recordar clase 3).
+
+Esto permite la identificación de los parámetros para poder estimar el modelo.
+
+Si hay algún grado de correlación alta hará que se haga difícil la identificación de parámetros.
+
+En síntesis: dice que no pueden estar correlacionadas de manera perfecta. Eso si, si están correlacionadas, dificulta la **identificación** y podría producir un problema de **especificidad**.
+
+MCO va a intentar hacer esta combinación lo más **precisa** posible.
+
+#### Media condicional
+
+$E(u|x)=0$
+
+También se puede escribir como E(u|x1,...,xk) = 0
+
+Significa que ninguno de los factores en el término de error correlaciona con las variables explicativas.
+
+Esto implica que la media de los errores es 0.
+
+Imaginemos que tenemos un modelo de regresión, y alguno de los factores que queríamos incorporar no las observamos. Por ejemplo, el ingreso salarial en base a variables observadas pero no tenemos las no observadas (habilidad del trabajador) que se irán al error. Si la habilidad estuviese correlacionada con nivel de escolaridad.
+
+Fuentes:
+
+- Omisión de variables relevantes.
+- Especificación incorrecta de forma funcional, omisión de variables relevantes, más de una **variable endógena** ecuaciones simultáneas, **errores de medición**.
+
+Con ML.1, ML2, ML3 y ML4 buscamos que sea insesgado.
+
+#### Homocedastecidad
+
+$V(u|X) = \sigma{^2}I$
+
+- Tenemos que ver que la dispersión dentro de los grupos no fuera la misma (las medias condicionales).
+
+- Buscamos que la varianza del error sea constante.
+
+- Es decir, la varianza del error no depende de haber pbservado una realización particular de X. Cuando este supuesto no se cumple, se dice que el modelo presenta heterocedasticdad.
+
+Un ejemplo:
+En la regresión del salario sobre el salario sobre años de educación, probablemente la varianza por cada año de educación sea distinta. Podría ser por el tipo de empleos son similares en personas con menos años de educación.
+
+- Gracias a esto se puede ver de que son de mínima varianza entre los estimandores insesgados
+
+- Teorema Gauss Markow
+
+
+## Clase 5 - parte  2
+
+**Propiedades estadística - varianza**
+
+Cuando estemos mirando al vector de betas cuadrados

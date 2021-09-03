@@ -1,0 +1,240 @@
+---
+title: |
+ | \vspace{5cm} Tarea N°1 
+subtitle: |
+ Econometría I
+date: "`r format(Sys.Date(), '%A %d, %B %Y')`"
+header-includes:
+- \usepackage{titling}
+- \pretitle{\begin{center}\LARGE\includegraphics[width=6cm]{../img/logo-ie-uc.png}\\[\bigskipamount]}
+- \posttitle{\end{center}}
+- !expr system.file("includes/fig-valign.tex", package = "summarytools")
+- \usepackage{booktabs}
+author: | 
+ | 
+ | \vspace{8cm} [Valentina Andrade](valentinaandrade@uchile.cl), Rosario Novión y Cataliza Baez
+abstract: |
+  El siguiente reporte tiene por objetivo presentar los análisis realizados en la Tarea N°1 del ramo Econometría I dictado por el profesor Juan Urquiza
+output:
+  pdf_document:
+    highlight: tango
+    number_sections: TRUE
+    pandoc_args: !expr rmdfiltr::add_wordcount_filter()
+  html_document:
+    highlight: tango
+bibliography: "https://github.com/nicolasrattor/formatos/raw/main/Formato%20pdf%20uc/input/bib/bib.bib"
+linkcolor: red
+urlcolor: blue
+link-citations: yes
+csl: "https://github.com/nicolasrattor/formatos/raw/main/Formato%20pdf%20uc/input/bib/apa.csl"
+fontsize: 14pt
+lang: "es-CL"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE,
+                      message = FALSE,
+                      echo = FALSE) 
+Sys.setlocale("LC_ALL","ES_ES.UTF-8") # para temas de caracteres en español, recomendable
+summarytools::st_options(
+  plain.ascii = FALSE, 
+  style = "rmarkdown",
+  dfSummary.style = "grid",
+  dfSummary.valid.col = FALSE,
+  dfSummary.graph.magnif = .52,
+  subtitle.emphasis = FALSE,
+  tmp.img.dir = "/tmp"
+)
+```
+
+```{r load pack, echo = F}
+# 1. Cargar paquetes ------------------------------------------------------
+pacman::p_load(googledrive, performance, tidyverse, ggthemes,
+               sjPlot, sjmisc, summarytools, xtable, texreg, ggpubr)
+options(xtable.comment = FALSE)
+corstars <-function(x, method=c("pearson", "spearman"), removeTriangle=c("upper", "lower"),
+                    result=c("none", "html", "latex")){
+  #Compute correlation matrix
+  require(Hmisc)
+  x <- as.matrix(x)
+  correlation_matrix<-rcorr(x, type=method[1])
+  R <- correlation_matrix$r # Matrix of correlation coeficients
+  p <- correlation_matrix$P # Matrix of p-value 
+  
+  ## Define notions for significance levels; spacing is important.
+  mystars <- ifelse(p < .0001, "****", ifelse(p < .001, "*** ", ifelse(p < .01, "**  ", ifelse(p < .05, "*   ", "    "))))
+  
+  ## trunctuate the correlation matrix to two decimal
+  R <- format(round(cbind(rep(-1.11, ncol(x)), R), 2))[,-1]
+  
+  ## build a new matrix that includes the correlations with their apropriate stars
+  Rnew <- matrix(paste(R, mystars, sep=""), ncol=ncol(x))
+  diag(Rnew) <- paste(diag(R), " ", sep="")
+  rownames(Rnew) <- colnames(x)
+  colnames(Rnew) <- paste(colnames(x), "", sep="")
+  
+  ## remove upper triangle of correlation matrix
+  if(removeTriangle[1]=="upper"){
+    Rnew <- as.matrix(Rnew)
+    Rnew[upper.tri(Rnew, diag = TRUE)] <- ""
+    Rnew <- as.data.frame(Rnew)
+  }
+  
+  ## remove lower triangle of correlation matrix
+  else if(removeTriangle[1]=="lower"){
+    Rnew <- as.matrix(Rnew)
+    Rnew[lower.tri(Rnew, diag = TRUE)] <- ""
+    Rnew <- as.data.frame(Rnew)
+  }
+  
+  ## remove last column and return the correlation matrix
+  Rnew <- cbind(Rnew[1:length(Rnew)-1])
+  if (result[1]=="none") return(Rnew)
+  else{
+    if(result[1]=="html") print(xtable(Rnew), type="html")
+    else print(xtable(Rnew), type="latex") 
+  }
+} 
+
+theme_set(theme_economist()
+          #+ scale_colour_economist(stata=TRUE)
+          )
+# 2. Load data ------------------------------------------------------------
+#drive_download("https://drive.google.com/file/d/1mXM-tODPoPS_-QbVM4F9x7QV07rNkyGf/view?usp=sharing", path = "input/base_tarea1.dta")
+data <- haven::read_dta("../input/base_tarea1.dta")
+data <- sjlabelled::set_label(data, c("País", "Tasa crecimiento anual (PIB real)",
+                                      "Grado de apertura comercio (promedio, En PIB)", "Escolaridad adultos (años promedio)",
+                              "Hitos disruptivos (promedio anual)","Asesinatos políticos (promedio anual)",
+                              "PIB per cápita (base 1960)"))
+
+
+
+```
+
+\thispagestyle{empty} 
+
+
+\newpage
+
+# Análisis descriptivo
+
+## Distribuciones univariadas
+
+- Distribución de growth, tradeshare, yearscchol
+
+- Describe (media, desviación estándar, mínimo y máximo)
+
+```{r descrip, echo= F, results='asis'}
+tab1 <- summarytools::dfSummary((data %>%  select(-country_name)),
+                             varnumbers = F, valid.col =  F, na.col = F, headings = F,
+                             graph.magnif = 1.5, style = "grid", 
+                             silent = T,
+                             plain.ascii = F)
+
+#tab1$`Freqs (% of Valid)` <- NULL
+```
+
+```{r, results='asis'}
+print(tab1 , footnote = "Fuente: Elaboración propia en base a datos de tarea N°1 (n = 64)" )  
+```
+
+
+## Distribuciones bivariadas
+
+### Matriz de correlaciones de todas las variables y luego discutir significancia estadística [punto 2]
+
+```{r corr, message=FALSE, warning=FALSE, results='asis'}
+corstars(data[,2:7], result = "latex")
+```
+ 
+
+## Gráficos de dispersión
+
+
+```{r corrploti, fig.cap= "Gráfico de dispersión entre la tasa de crecimiento económico y el grado de apertura de comercio."}
+ggscatter(data, x = "tradeshare", y = "growth",
+   add = "reg.line",
+   add.params = list(color = "gray", fill = "lightgray"), 
+   conf.int = TRUE, 
+   cor.coef = TRUE, 
+   cor.coeff.args = list(method = "pearson", label.sep = "\n")
+   ) + theme_economist() + scale_color_economist() + labs(x = "Grado de apertura de comercio (promedio, en PIB)", y = "Tasa crecimiento anual (PIB real)", caption = "Fuente: Elaboración propia en base a datos Tarea N°1")
+```
+
+
+```{r corrplot2, fig.cap= "Gráfico de dispersión entre la tasa de crecimiento económico y los años de educación de adultos"}
+ggscatter(data, x = "yearsschool", y = "growth",
+   add = "reg.line",
+   add.params = list(color = "gray", fill = "lightgray"), 
+   conf.int = TRUE, 
+   cor.coef = TRUE, 
+   cor.coeff.args = list(method = "pearson", label.sep = "\n")
+   ) + theme_economist() + scale_color_economist() + labs(x = "Escolaridad adultos (años promedio)", y = "Tasa crecimiento anual (PIB real)", caption = "Fuente: Elaboración propia en base a datos Tarea N°1")
+```
+
+## Análisis de regresión lineal múltiple
+
+```{r est-model}
+model1 <- lm(growth ~ tradeshare + yearsschool + rev_coups + assasinations + rgdp60, data = data)
+
+```
+
+
+```{r, results="asis"}
+texreg::texreg(model1,
+               custom.coef.names =  c("Intercepto",  "Grado de apertura comercio (promedio, En PIB)", "Escolaridad adultos (años promedio)",
+                              "Hitos disruptivos (promedio anual)","Asesinatos políticos (promedio anual)",
+                              "PIB per cápita (base 1960)"),
+               custom.note = "*** \\textit{p} < 0,001; ** \\textit{p} < 0,01; * \\textit{p} < 0,05. Coeficientes de regresión no estandarizados y error estándar entre paréntesis", 
+               digits = 3,
+               caption = "Modelo de regresión lineal que estima la tasa de crecimiento anual (en PIB)", 
+               caption.above = T,
+               include.adjrs = T,
+               include.fstatistic = T, 
+               include.rmse = T,
+               custom.model.names = "Modelo 1",
+               float.pos = "h")
+```
+
+
+
+**Rectas de regresión** 
+```{r comprobation-model}
+rsq <- round(summary(model1)$r.squared,3)
+inter <- round(coef(model1)[1],3)[[1]]
+coef.trade <- round(coef(model1)[2],3)
+coef.sch <- round(coef(model1)[3],3)
+coef.rev <- round(coef(model1)[4],3)
+coef.assa <- round(coef(model1)[5],3)
+coef.rgd <- round(coef(model1)[6],3)
+
+p.trade <- summary(model1)$coefficients[2,4]
+p.sch <- summary(model1)$coefficients[3,4]
+p.rev <- summary(model1)$coefficients[4,4]
+p.assa <- summary(model1)$coefficients[5,4]
+p.rgd<- summary(model1)$coefficients[6,4]
+
+t.trade <- round(summary(model1)$coefficients[2,3],2)
+t.sch <- round(summary(model1)$coefficients[3,3],2)
+t.rev <- round(summary(model1)$coefficients[4,3],2)
+t.assa <- round(summary(model1)$coefficients[5,3],2)
+t.rgd <- round(summary(model1)$coefficients[6,3],2)
+m.df <- model1$df.residual
+
+```
+
+**Función de Regresión Lineal Poblacional**
+
+
+$$
+\widehat{\text{growth}} = \beta_0 + (\beta_1 \cdot X_{\text{tradeshare}}) + (\beta_2 \cdot X_{\text{yearsschol}}) + (\beta_3 \cdot X_{\text{revcoups}}) + (\beta_4 \cdot X_{\text{assasinations}}) + (\beta_5 \cdot X_{\text{rgdp60}}) + u
+$$
+
+
+
+
+**Función de Regresión Lineal Muestral**
+
+$$
+\widehat{\text{growth}} = `r inter` + (`r coef.trade` \cdot X_{\text{tradeshare}}) + (`r coef.sch` \cdot X_{\text{yearsschol}}) + (`r coef.rev` \cdot X_{\text{revcoups}}) + (`r coef.assa` \cdot X_{\text{assasinations}}) + (`r coef.rgd` \cdot X_{\text{rgdp60}}) + u
+$$
