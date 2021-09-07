@@ -10,9 +10,23 @@ header-includes:
 - \posttitle{\end{center}}
 - !expr system.file("includes/fig-valign.tex", package = "summarytools")
 - \usepackage{booktabs}
+- \usepackage{amsmath}
+- \usepackage{longtable}
+- \usepackage{array}
+- \usepackage{multirow}
+- \usepackage{wrapfig}
+- \usepackage{float}
+- \usepackage{colortbl}
+- \usepackage{pdflscape}
+- \usepackage{tabu}
+- \usepackage{threeparttable}
+- \usepackage{threeparttablex}
+- \usepackage[normalem]{ulem}
+- \usepackage{makecell}
+- \usepackage{xcolor}
 author: | 
  | 
- | \vspace{8cm} [Valentina Andrade](valentinaandrade@uchile.cl), Rosario Novión y Cataliza Baez
+ | \vspace{8cm} [Valentina Andrade](valentinaandrade@uchile.cl), Rosario Novión y Cataliza Baeza
 abstract: |
   El siguiente reporte tiene por objetivo presentar los análisis realizados en la Tarea N°1 del ramo Econometría I dictado por el profesor Juan Urquiza
 output:
@@ -27,14 +41,15 @@ linkcolor: red
 urlcolor: blue
 link-citations: yes
 csl: "https://github.com/nicolasrattor/formatos/raw/main/Formato%20pdf%20uc/input/bib/apa.csl"
-fontsize: 14pt
+fontsize: 11pt
 lang: "es-CL"
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(warning = FALSE,
+                      error = F, 
                       message = FALSE,
-                      echo = FALSE) 
+                      echo = FALSE, fig.pos = "H") 
 Sys.setlocale("LC_ALL","ES_ES.UTF-8") # para temas de caracteres en español, recomendable
 summarytools::st_options(
   plain.ascii = FALSE, 
@@ -49,66 +64,24 @@ summarytools::st_options(
 
 ```{r load pack, echo = F}
 # 1. Cargar paquetes ------------------------------------------------------
-pacman::p_load(googledrive, performance, tidyverse, ggthemes,
-               sjPlot, sjmisc, summarytools, xtable, texreg, ggpubr)
-options(xtable.comment = FALSE)
-corstars <-function(x, method=c("pearson", "spearman"), removeTriangle=c("upper", "lower"),
-                    result=c("none", "html", "latex")){
-  #Compute correlation matrix
-  require(Hmisc)
-  x <- as.matrix(x)
-  correlation_matrix<-rcorr(x, type=method[1])
-  R <- correlation_matrix$r # Matrix of correlation coeficients
-  p <- correlation_matrix$P # Matrix of p-value 
-  
-  ## Define notions for significance levels; spacing is important.
-  mystars <- ifelse(p < .0001, "****", ifelse(p < .001, "*** ", ifelse(p < .01, "**  ", ifelse(p < .05, "*   ", "    "))))
-  
-  ## trunctuate the correlation matrix to two decimal
-  R <- format(round(cbind(rep(-1.11, ncol(x)), R), 2))[,-1]
-  
-  ## build a new matrix that includes the correlations with their apropriate stars
-  Rnew <- matrix(paste(R, mystars, sep=""), ncol=ncol(x))
-  diag(Rnew) <- paste(diag(R), " ", sep="")
-  rownames(Rnew) <- colnames(x)
-  colnames(Rnew) <- paste(colnames(x), "", sep="")
-  
-  ## remove upper triangle of correlation matrix
-  if(removeTriangle[1]=="upper"){
-    Rnew <- as.matrix(Rnew)
-    Rnew[upper.tri(Rnew, diag = TRUE)] <- ""
-    Rnew <- as.data.frame(Rnew)
-  }
-  
-  ## remove lower triangle of correlation matrix
-  else if(removeTriangle[1]=="lower"){
-    Rnew <- as.matrix(Rnew)
-    Rnew[lower.tri(Rnew, diag = TRUE)] <- ""
-    Rnew <- as.data.frame(Rnew)
-  }
-  
-  ## remove last column and return the correlation matrix
-  Rnew <- cbind(Rnew[1:length(Rnew)-1])
-  if (result[1]=="none") return(Rnew)
-  else{
-    if(result[1]=="html") print(xtable(Rnew), type="html")
-    else print(xtable(Rnew), type="latex") 
-  }
-} 
-
+pacman::p_load(googledrive, easystats, tidyverse, ggthemes,
+               sjPlot, sjmisc, summarytools,
+               texreg, ggpubr, multcomp, jtools)
 theme_set(theme_economist()
           #+ scale_colour_economist(stata=TRUE)
           )
+options(knitr.table.format = "latex")
+kable <- function(data) {
+  knitr::kable(data, booktabs = TRUE, digits = 3) %>% 
+    kable_styling(latex_options =c("striped", "scale_down"), position = "center")
+}
 # 2. Load data ------------------------------------------------------------
 #drive_download("https://drive.google.com/file/d/1mXM-tODPoPS_-QbVM4F9x7QV07rNkyGf/view?usp=sharing", path = "input/base_tarea1.dta")
 data <- haven::read_dta("../input/base_tarea1.dta")
 data <- sjlabelled::set_label(data, c("País", "Tasa crecimiento anual (PIB real)",
-                                      "Grado de apertura comercio (promedio, En PIB)", "Escolaridad adultos (años promedio)",
+                                      "Grado de apertura comercio (promedio,PIB)", "Escolaridad adultos (años promedio)",
                               "Hitos disruptivos (promedio anual)","Asesinatos políticos (promedio anual)",
                               "PIB per cápita (base 1960)"))
-
-
-
 ```
 
 \thispagestyle{empty} 
@@ -125,31 +98,36 @@ data <- sjlabelled::set_label(data, c("País", "Tasa crecimiento anual (PIB real
 - Describe (media, desviación estándar, mínimo y máximo)
 
 ```{r descrip, echo= F, results='asis'}
-tab1 <- summarytools::dfSummary((data %>%  select(-country_name)),
+tab <- summarytools::dfSummary((data %>%  dplyr::select(-country_name)),
                              varnumbers = F, valid.col =  F, na.col = F, headings = F,
                              graph.magnif = 1.5, style = "grid", 
                              silent = T,
-                             plain.ascii = F)
+                             plain.ascii = F) %>% print_md()
 
 #tab1$`Freqs (% of Valid)` <- NULL
 ```
 
-```{r, results='asis'}
+```{r descript table, results='asis', eval = F}
 print(tab1 , footnote = "Fuente: Elaboración propia en base a datos de tarea N°1 (n = 64)" )  
 ```
 
 
 ## Distribuciones bivariadas
 
-### Matriz de correlaciones de todas las variables y luego discutir significancia estadística [punto 2]
+### Matriz de correlaciones de todas las variables 
 
-```{r corr, message=FALSE, warning=FALSE, results='asis'}
-corstars(data[,2:7], result = "latex")
+- y luego discutir significancia estadística
+```{r corr}
+data %>% dplyr::select(2:7) %>% 
+  correlation() %>%
+  summary() %>%
+  print_md(caption = "Matriz de correlaciones (R Pearson)", footer = "Nota: *** \\textit{p} < 0,001; ** \\textit{p} < 0,01; * \\textit{p} < 0,05.") 
 ```
- 
+
 
 ## Gráficos de dispersión
 
+- Decir algo sobre la relación entre variables 
 
 ```{r corrploti, fig.cap= "Gráfico de dispersión entre la tasa de crecimiento económico y el grado de apertura de comercio."}
 ggscatter(data, x = "tradeshare", y = "growth",
@@ -158,7 +136,7 @@ ggscatter(data, x = "tradeshare", y = "growth",
    conf.int = TRUE, 
    cor.coef = TRUE, 
    cor.coeff.args = list(method = "pearson", label.sep = "\n")
-   ) + theme_economist() + scale_color_economist() + labs(x = "Grado de apertura de comercio (promedio, en PIB)", y = "Tasa crecimiento anual (PIB real)", caption = "Fuente: Elaboración propia en base a datos Tarea N°1")
+   ) + theme_economist() + scale_color_economist() + labs(x = "Grado de apertura de comercio (promedio, en PIB)", y = "Tasa crecimiento anual (PIB real)", title = "", caption = "Fuente: Elaboración propia en base a datos Tarea N°1")
 ```
 
 
@@ -182,7 +160,12 @@ model1 <- lm(growth ~ tradeshare + yearsschool + rev_coups + assasinations + rgd
 
 ```{r, results="asis"}
 texreg::texreg(model1,
-               custom.coef.names =  c("Intercepto",  "Grado de apertura comercio (promedio, En PIB)", "Escolaridad adultos (años promedio)",
+               custom.gof.rows = list(" " = 1, 
+                                      "Determinante económico" = 2, 
+                                      "Determinante social" = 3,
+                                      "Determinantes políticos" = 4,
+                                      "Control" = 5),
+               custom.coef.names =  c("Intercepto",  "Grado de apertura comercio (promedio, en PIB)", "Escolaridad adultos (años promedio)",
                               "Hitos disruptivos (promedio anual)","Asesinatos políticos (promedio anual)",
                               "PIB per cápita (base 1960)"),
                custom.note = "*** \\textit{p} < 0,001; ** \\textit{p} < 0,01; * \\textit{p} < 0,05. Coeficientes de regresión no estandarizados y error estándar entre paréntesis", 
@@ -196,6 +179,9 @@ texreg::texreg(model1,
                float.pos = "h")
 ```
 
+```{r plot_model1, fig.cap= "Forest-plot con los coeficientes estimados del modelo de regresión que estima la tasa de crecimiento anual (PIB real)"}
+plot_model(model1, show.p = T) + labs(y="Coeficientes de regresión", caption = "Fuente: Elaboración propia en base a modelo N°1", title = "")
+```
 
 
 **Rectas de regresión** 
@@ -238,3 +224,143 @@ $$
 $$
 \widehat{\text{growth}} = `r inter` + (`r coef.trade` \cdot X_{\text{tradeshare}}) + (`r coef.sch` \cdot X_{\text{yearsschol}}) + (`r coef.rev` \cdot X_{\text{revcoups}}) + (`r coef.assa` \cdot X_{\text{assasinations}}) + (`r coef.rgd` \cdot X_{\text{rgdp60}}) + u
 $$
+
+## Propiedades del Modelo de Regresión
+
+### Suma de residuos 
+
+Una de las propiedades importantes de *MCO* es que el valor esperado de los residuos es cero ($E(u)$), o en terminos matriciales que la suma de los residuos es igual a cero [^1]
+
+$$
+E(u) = \sum\limits_{i=0}^n{\widehat{u}_i} = `r round(sum(model1$residuals),3)`
+$$
+[^1]: Para ser exactas el valor es `r sum(model1$residuals)`, valor muy pequeño que tiende a cero. 
+
+### Ortogonales a variables explicativas
+
+Sea $\widehat{u}$ un vector *nx1* que denota los residuos y $X_{nxm}$ matriz de predictores del modelo que contiene a  $X_1, X_2, ..., X_k$ parámetros, diremos que la suma de residuos cuadrado (*SCR*) $\widehat{u}'\widehat{u}$ son ortogonales. Pero además, diremos que la matriz $\widehat{u}$ es ortogonal a las variables explicativas, lo que significa que hay una relación de independencia de los valores esperados de $\widehat{u}$ y $X$
+
+$$
+\widehat{u}X = E(\widehat{u}|X) = 0 
+$$
+
+```{r}
+
+
+```
+
+### Promedio de la variable dependiente coincide con promedio de variable dependiente estimada
+
+### Comprobar coeficiente determinación $R^2$ es igual al cuadrado del coeficiente de correlacion entre variable dependiente y estimada. 
+
+## Marginal effects 
+```{r marginal1, results='asis', fig.cap="Valores predichos para la tasa de crecimiento anual (en PIB) según grado de apertura del comercio (PIB promedio)"}
+plot_model(model1, type = "pred", terms = c("tradeshare"), title = "")
+```
+
+```{r marginal2, results='asis', fig.cap="Valores predichos para la tasa de crecimiento anual (en PIB) segúnaños de escolaridad promedio de la población adulta)"}
+
+plot_model(model1, type = "pred", terms = c("yearsschool"), title = "")
+```
+
+## Global significance model
+
+- Estadístico F
+- Demostrar que R es igual a F
+
+## Predicción
+
+Se calcularán dos predicciones de la tasa de crecimiento ($\widehat{growth}$) a partir de los resultados obtenidos en el *modelo 1*.
+
+### Predicción en base a la media de los predictores
+
+La primera predicción considera los valores promedio ($\bar{X}$) de cada uno de los predictores. Formalmente tenemos que
+
+\begin{align*}
+\widehat{\text{growth}} = `r inter` + (`r coef.trade` \cdot \bar{X}_{tradeshare}) + (`r coef.sch` \cdot \bar{X}_{yearsschol}) + (`r coef.rev` \cdot \bar{X}_{revcoups}) + (`r coef.assa` \cdot \bar{X}_{assasination}) + (`r coef.rgd` \cdot \bar{X}_{rgdp60}) + u
+\end{align*}
+
+Donde valores esperados fueron tomados del *Cuadro 1*
+\begin{align*}
+\bar{X}_{tradeshare} = `r round(mean(data$tradeshare),3)`\\
+\bar{X}_{yearsschol} =  `r round(mean(data$yearsschool),3)` \\
+\bar{X}_{revcoups} =  `r round(mean(data$rev_coups),3)` \\
+\bar{X}_{assasination}= `r round(mean(data$assasinations),3)`\\
+\bar{X}_{rgdp60}= `r round(mean(data$rgdp60),3)` 
+\end{align*}
+
+Con ello obtenemos
+
+
+```{r}
+pred1 <- inter + coef.trade*mean(data$tradeshare) + coef.sch*mean(data$yearsschool) + coef.rev*mean(data$rev_coups) + coef.assa*mean(data$assasinations) + coef.rgd*mean(data$rgdp60)    
+```
+
+$$
+\widehat{\text{growth}_1} = `r inter` + `r coef.trade` \cdot `r round(mean(data$tradeshare),3)`+ `r coef.sch` \cdot `r round(mean(data$yearsschool),3)` + `r coef.rev` \cdot `r round(mean(data$rev_coups),3)`+ `r coef.assa` \cdot `r round(mean(data$assasinations),3)` + `r coef.rgd` \cdot `r round(mean(data$rgdp60),3)` =  `r pred1`
+$$
+
+### Predicción en base a la media de predictores y dos desviaciones estándar de *tradeshare*
+
+Segundo, se realizará una predicción del crecimiento ($\widehat{growth_2}$) con los valores promedios para todas las variables, excepto para *tradeshare* que toma un valor igual a dos desviaciones estándar por encima de la media. Esto significa que $\bar{X}_{tradeshare} + 2\sigma_{tradeshare}$
+
+```{r}
+pred2 <- inter + coef.trade*mean(data$tradeshare)+ 2*sd(data$tradeshare) + coef.sch*mean(data$yearsschool) + coef.rev*mean(data$rev_coups) + coef.assa*mean(data$assasinations) + coef.rgd*mean(data$rgdp60)    
+```
+
+$$
+\widehat{\text{growth}_2} = `r inter` + `r coef.trade` \cdot `r round(mean(data$tradeshare) + 2*sd(data$tradeshare),3)`+ `r coef.sch` \cdot `r round(mean(data$yearsschool),3)` + `r coef.rev` \cdot `r round(mean(data$rev_coups),3)`+ `r coef.assa` \cdot `r round(mean(data$assasinations),3)` + `r coef.rgd` \cdot `r round(mean(data$rgdp60),3)` =  `r pred2`
+$$
+
+
+Ahora veremos si estas estimaciones son significativamente distintas. Para ello testearemos la $H_0$ que indica que no hay diferencias significativas entre la predicción con los valores promedio y aquella que considera para *tradeshare* un valor sobre dos desviaciones estándar de su media. 
+
+Como podemos ver en el resultado, no hay evidencia suficiente para rechazar $H_0$, por lo que no se puede plantear de manera certera que a nivel poblacional ambas predicciones sean estadísticamente distintas. 
+```{r}
+summary(glht(model1, linfct = c("tradeshare = 0.9990572"))) 
+```
+
+## Estimación del cambio en el crecimiento en base a cambio educativo
+
+Estime el cambio en la tasa de crecimiento que predice el MODELO 1 para un país que en
+1960 implementó una política educativa que permitió aumentar la escolaridad promedio de
+4 a 6 años, y luego refiérase a la significancia estadística y económica.
+
+```{r tab predictions-9}
+make_predictions(model1, pred = "yearsschool", pred.values = c(4,6)) %>% kableExtra::kable(., col.names = c("Tasa crecimiento", "Grado apertura", "Hitos disruptivos", "Asesinatos políticos", "PIB 1960", "Años de escolaridad promedio", "Intervalo superior", "Intervalo inferior"), caption = "Valores predichos para la tasa de crecimiento (en PIB) según años de escolaridad promedio 4 y 6 años") %>% kableExtra::footnote(general = "Nota: Los intervalos de confianza fueron calculados a un 95% de confianza")
+```
+
+
+```{r effect plot, fig.cap= "Gráfico de valores predichos para la tasa de crecimiento según los años de escolaridad promedio. *Nota*: La línea roja marca los años de escolaridad en 4 y la azul en 6"}
+effect_plot(model1, pred = "yearsschool", interval = TRUE, plot.points = TRUE) +
+  geom_vline(aes(xintercept = 6),color = "darkblue", linetype = "dashed", size = 1) +
+  geom_vline(aes(xintercept = 4),color = "darkred", linetype = "dashed", size = 0.8) +
+  labs(x = "Escolaridad adultos (años promedio)", y ="Tasa crecimiento anual (PIB real)")+
+  theme_economist() + scale_fill_economist()
+```
+
+
+$$\triangle\widehat{growth} = \triangle\bar{X}_{yearsschool}\\
+E(growth|yearsschool =6)$$
+
+* Importante: control estadístico
+
+## Significancia conjunta
+
+Evalúe la significancia conjunta de las variables tradeshare, rev_coups y assasinations, y luego
+compruebe que el estadístico F reportado por STATA puede obtenerse a partir de la
+diferencia en la suma de cuadrados residuales de un modelo restringido y la de un modelo
+sin restringir.
+
+
+
+# Apéndice 
+
+## Visualización de propiedades 
+```{r model, results='asis'}
+plot_model(model1, type = "resid")
+plot_model(model1, type = "diag")
+```
+
+
+
