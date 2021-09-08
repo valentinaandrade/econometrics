@@ -241,7 +241,7 @@ $$
 Sea $\widehat{u}$ un vector *nx1* que denota los residuos y $X_{nxm}$ matriz de predictores del modelo que contiene a  $X_1, X_2, ..., X_k$ parámetros, diremos que la suma de residuos cuadrado (*SCR*) $\widehat{u}'\widehat{u}$ son ortogonales. Pero además, diremos que la matriz $\widehat{u}$ es ortogonal a las variables explicativas, lo que significa que hay una relación de independencia de los valores esperados de $\widehat{u}$ y $X$
 
 $$
-\widehat{u}X = E(\widehat{u}|X) = 0 
+\widehat{u}'X = E(\widehat{u}|X) = 0 
 $$
 
 ```{r}
