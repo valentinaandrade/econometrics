@@ -60,6 +60,66 @@ summarytools::st_options(
   subtitle.emphasis = FALSE,
   tmp.img.dir = "/tmp"
 )
+plot_residuals <- function(fit, geom.size = 2, remove.estimates = NULL, show.lines = TRUE,
+                      show.resid = TRUE, show.pred = TRUE, show.ci = FALSE) {
+  # show lines only when both residual and predicted
+  # values are plotted - else, lines make no sense
+  if (!show.pred || !show.resid) show.lines <- FALSE
+
+  # Obtain predicted and residual values
+  mydat <- insight::get_data(fit)
+
+  # check whether estimates should be removed from plot
+  if (!is.null(remove.estimates)) {
+    keep <- which(!colnames(mydat) %in% remove.estimates)
+  } else {
+    keep <- seq_len(ncol(mydat))
+  }
+  mydat$predicted <- stats::predict(fit)
+  mydat$residuals <- stats::residuals(fit)
+
+  # get name of response, used in ggplot-aes
+  rv <- insight::find_response(fit)
+
+  # remove estimates, if required
+  dummy <- mydat %>% dplyr::select(keep, .data$predicted, .data$residuals)
+
+  # set default variable labels, used as column names, so labelled
+  # data variable labels appear in facet grid header.
+  sel <- 2:length(keep)
+  var.labels <- sjlabelled::get_label(dummy, def.value = colnames(dummy)[sel])[sel]
+  if (is.null(var.labels) || all(var.labels == "")) var.labels <- colnames(dummy)[sel]
+  colnames(dummy)[sel] <- var.labels
+
+  # melt data
+  mydat <- suppressWarnings(dummy %>%
+    tidyr::gather(key = "grp", value = "x", -1, -.data$predicted, -.data$residuals))
+
+  colnames(mydat)[1] <- ".response"
+
+  # melt data, build basic plot
+  res.plot <- ggplot(mydat, aes(x = .data$x, y = .data$.response)) +
+    stat_smooth(method = "lm", se = show.ci, colour = "grey70")
+
+  if (show.lines) res.plot <- res.plot +
+    geom_segment(aes(xend = .data$x, yend = .data$predicted), alpha = .3)
+
+  if (show.resid) res.plot <- res.plot +
+    geom_point(aes(fill = .data$residuals), size = geom.size, shape = 21, colour = "grey50")
+
+  if (show.pred) res.plot <- res.plot +
+    geom_point(aes(y = .data$predicted), shape = 1, size = geom.size)
+
+  # residual plot
+  res.plot <- res.plot +
+    facet_wrap(~grp, nrow= 3, scales = "free") +
+    scale_fill_gradient2(low = "#1a476f", mid = "white", high = "#c10534") +
+    guides(color = FALSE, fill = FALSE) +
+    labs(x = NULL, y = sjlabelled::get_label(mydat[[1]], def.value = rv))
+
+  res.plot
+}
+
 ```
 
 ```{r load pack, echo = F}
@@ -152,6 +212,7 @@ ggscatter(data, x = "yearsschool", y = "growth",
 
 ## Análisis de regresión lineal múltiple
 
+- Interpretar estimación puntual de b1 y b2 y luego significancia estadística y economica 
 ```{r est-model}
 model1 <- lm(growth ~ tradeshare + yearsschool + rev_coups + assasinations + rgdp60, data = data)
 
@@ -229,29 +290,55 @@ $$
 
 ### Suma de residuos 
 
-Una de las propiedades importantes de *MCO* es que el valor esperado de los residuos es cero ($E(u)$), o en terminos matriciales que la suma de los residuos es igual a cero [^1]
+Uno de los supuestos importantes de *OLS*[^1] es que el valor esperado de los residuos es cero ($E(\widehat{u})=0$), o en términos matriciales que la suma de los residuos $\widehat{u}_i$ es igual a cero [^2]
 
 $$
-E(u) = \sum\limits_{i=0}^n{\widehat{u}_i} = `r round(sum(model1$residuals),3)`
+E(u) = \sum\limits_{i=0}^n{\widehat{u}_i} = `r round(sum(modeldata$residuals),3)`
 $$
-[^1]: Para ser exactas el valor es `r sum(model1$residuals)`, valor muy pequeño que tiende a cero. 
+[^1]: *Ordinary Least Squares*, o en español, Mínimo Cuadrado Ordinarios (*MCO*)
+[^2]: Para ser exactas el valor es `r sum(model1$residuals)`, valor muy pequeño que tiende a cero. 
 
 ### Ortogonales a variables explicativas
 
-Sea $\widehat{u}$ un vector *nx1* que denota los residuos y $X_{nxm}$ matriz de predictores del modelo que contiene a  $X_1, X_2, ..., X_k$ parámetros, diremos que la suma de residuos cuadrado (*SCR*) $\widehat{u}'\widehat{u}$ son ortogonales. Pero además, diremos que la matriz $\widehat{u}$ es ortogonal a las variables explicativas, lo que significa que hay una relación de independencia de los valores esperados de $\widehat{u}$ y $X$
+Sea $\widehat{u}$ un vector *nx1* que denota los residuos y $X_{nxm}$ matriz de predictores del modelo que contiene a  $X_1, X_2, ..., X_k$ parámetros, diremos que la suma de residuos cuadrado (*SSR*) $\widehat{u}'\widehat{u}$ son ortogonales. Pero además, diremos que la matriz $\widehat{u}$ es ortogonal a las variables explicativas, lo que significa que hay una relación de independencia de los valores esperados de $\widehat{u}$ y $X$ (supuesto *MLR4* del Teorema de Gauss Markow para la estimación *OLS*)
 
 $$
 \widehat{u}'X = E(\widehat{u}|X) = 0 
 $$
 
-```{r}
-
+```{r, echo= F}
+modeldata <- broom::augment(model1)
+modeldata %>%
+    pivot_longer(cols = 1:6) %>% 
+    group_by(name) %>% 
+    summarise(mean = mean(.resid)) %>%
+  filter(name != "growth") %>% 
+  kableExtra::kable(., col.names = c("Variables independientes ($X$)", "$E(u|X_i)$")) 
 
 ```
+Como modo de complementar este análisis, una forma convencional es la visualización de los residuos, dado ciertos parámetros de los modelos [^3]. Como se puede ver en la figura ...(aquí describir)
+
+
+```{r orthogonal, results='asis', fig.cap="Distribución de residuos para cada predictor del modelo"}
+plot_residuals(model1)
+```
+
+
+[^3]: [Recomendación de visualización de la relación entre residuos y valores predichos en STATA](https://online.stat.psu.edu/stat501/book/export/html/912)
 
 ### Promedio de la variable dependiente coincide con promedio de variable dependiente estimada
 
+Por ley de esperanzas iteradas decimos que  $E(y_i) = E[E(y_i|X)]$, donde $E(y_i|X)$ representa el valor esperado de *y* que ha sido estimado a partir de un cambio en $X$, manteniendo lo demas constante (en otras palabras $\widehat{y}$ estimado). 
+
+Luego, calculamos la media de $\widehat{y}$ en los datos del modelo, obteniendo `r round(mean(modeldata$.fitted),5)`. Mientras que, tal como reportamos en el *Cuadro 1* la media de la tasa de crecimiento en la muestra es `r round(mean(data$growth),5)`
+
 ### Comprobar coeficiente determinación $R^2$ es igual al cuadrado del coeficiente de correlacion entre variable dependiente y estimada. 
+
+Según Wooldrige (2019) $R^2$ se puede mostrar como el cuadrado del coeficiente de coorelaci´´on entre las $y_i$ reales y los valores ajustados de $\widehat{y}_i$. Formalmente
+
+$$
+R^2 = \frac{(\sum\limits_{i=0}^n{(y_i - \widehat{y})(\widehat{y}_i - \bar{\widehat{y}})})^2}{{\sum\limits_{i=0}^n{(y_i - \widehat{y})^2}}\cdot{(\widehat{y}_i - \bar{\widehat{y}})}^2}}
+$$
 
 ## Marginal effects 
 ```{r marginal1, results='asis', fig.cap="Valores predichos para la tasa de crecimiento anual (en PIB) según grado de apertura del comercio (PIB promedio)"}
