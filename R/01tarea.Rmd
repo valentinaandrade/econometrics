@@ -23,16 +23,17 @@ header-includes:
 - \usepackage{threeparttablex}
 - \usepackage[normalem]{ulem}
 - \usepackage{makecell}
-- \usepackage{xcolor}
 author: | 
  | 
- | \vspace{8cm} [Valentina Andrade](valentinaandrade@uchile.cl), Rosario Novión y Cataliza Baeza
+ | \vspace{8cm} [Valentina Andrade](valentinaandrade@uchile.cl), Rosario Novión y Catalina Baeza
 abstract: |
-  El siguiente reporte tiene por objetivo presentar los análisis realizados en la Tarea N°1 del ramo Econometría I dictado por el profesor Juan Urquiza
+  El siguiente reporte tiene por objetivo presentar los análisis realizados en la Tarea N°1 del ramo Econometría I dictado por el profesor Juan Urquiza. El código del reporte, así como los análisis adicionales [se pueden obtener en el siguiente link](https://github.com/valentinaandrade/econometrics/blob/main/R/01tarea.Rmd)
 output:
   pdf_document:
+    extra_dependencies: ["float"]
+    latex_engine: xelatex
     highlight: tango
-    number_sections: TRUE
+    number_sections: FALSE
     pandoc_args: !expr rmdfiltr::add_wordcount_filter()
   html_document:
     highlight: tango
@@ -49,17 +50,26 @@ lang: "es-CL"
 knitr::opts_chunk$set(warning = FALSE,
                       error = F, 
                       message = FALSE,
-                      echo = FALSE, fig.pos = "H") 
+                      echo = FALSE, fig.pos = "H", out.extra = "") 
 Sys.setlocale("LC_ALL","ES_ES.UTF-8") # para temas de caracteres en español, recomendable
 summarytools::st_options(
   plain.ascii = FALSE, 
   style = "rmarkdown",
   dfSummary.style = "grid",
   dfSummary.valid.col = FALSE,
-  dfSummary.graph.magnif = .52,
+  dfSummary.graph.magnif = 1.5,
   subtitle.emphasis = FALSE,
-  tmp.img.dir = "/tmp"
+  tmp.img.dir = "/tmp",
+  lang = "es"
 )
+table.expand <- function(cells, cols.width, justify, sep.cols) {
+        cells <- enc2native(cells)
+        .Call('pander_tableExpand_cpp', PACKAGE = 'pander', cells, cols.width, justify, sep.cols, style)
+        .Call('pander_tableExpand_cpp', PACKAGE = 'pander', cells, cols.width, justify, sep.cols, style)
+}
+
+
+
 plot_residuals <- function(fit, geom.size = 2, remove.estimates = NULL, show.lines = TRUE,
                       show.resid = TRUE, show.pred = TRUE, show.ci = FALSE) {
   # show lines only when both residual and predicted
@@ -112,7 +122,7 @@ plot_residuals <- function(fit, geom.size = 2, remove.estimates = NULL, show.lin
 
   # residual plot
   res.plot <- res.plot +
-    facet_wrap(~grp, nrow= 3, scales = "free") +
+    facet_grid(~grp, scales = "free", space = "free") +
     scale_fill_gradient2(low = "#1a476f", mid = "white", high = "#c10534") +
     guides(color = FALSE, fill = FALSE) +
     labs(x = NULL, y = sjlabelled::get_label(mydat[[1]], def.value = rv))
@@ -127,21 +137,24 @@ plot_residuals <- function(fit, geom.size = 2, remove.estimates = NULL, show.lin
 pacman::p_load(googledrive, easystats, tidyverse, ggthemes,
                sjPlot, sjmisc, summarytools,
                texreg, ggpubr, multcomp, jtools)
-theme_set(theme_economist()
-          #+ scale_colour_economist(stata=TRUE)
-          )
+theme_set(theme_stata(base_size = 10, base_family = "sans", scheme = "s2color"))
+sjPlot::set_theme(theme_stata(base_size = 10, base_family = "sans", scheme = "s2color"))
 options(knitr.table.format = "latex")
 kable <- function(data) {
-  knitr::kable(data, booktabs = TRUE, digits = 3) %>% 
-    kable_styling(latex_options =c("striped", "scale_down"), position = "center")
+  kableExtra::kable(data, booktabs = TRUE, digits = 3) %>% 
+    kableExtra::kable_styling(latex_options =c("scale_down"), position = "center")
 }
 # 2. Load data ------------------------------------------------------------
 #drive_download("https://drive.google.com/file/d/1mXM-tODPoPS_-QbVM4F9x7QV07rNkyGf/view?usp=sharing", path = "input/base_tarea1.dta")
 data <- haven::read_dta("../input/base_tarea1.dta")
-data <- sjlabelled::set_label(data, c("País", "Tasa crecimiento anual (PIB real)",
-                                      "Grado de apertura comercio (promedio,PIB)", "Escolaridad adultos (años promedio)",
-                              "Hitos disruptivos (promedio anual)","Asesinatos políticos (promedio anual)",
+data2 <- haven::read_dta("../input/base_tarea1.dta")
+data <- sjlabelled::set_label(data, c("País", "Tasa crecimiento anual PIB real",
+                                      "Grado de apertura comercio", "Escolaridad adultos(años promedio)",
+                              "Hitos disruptivos(promedio anual)","Asesinatos políticos(promedio anual)",
                               "PIB per cápita (base 1960)"))
+corr <- readxl::read_xlsx("input/correlation-doc.xlsx")
+options(knitr.kable.NA = '')
+
 ```
 
 \thispagestyle{empty} 
@@ -151,68 +164,68 @@ data <- sjlabelled::set_label(data, c("País", "Tasa crecimiento anual (PIB real
 
 # Análisis descriptivo
 
-## Distribuciones univariadas
+## 1. Distribuciones univariadas
 
 - Distribución de growth, tradeshare, yearscchol
 
 - Describe (media, desviación estándar, mínimo y máximo)
 
 ```{r descrip, echo= F, results='asis'}
-tab <- summarytools::dfSummary((data %>%  dplyr::select(-country_name)),
-                             varnumbers = F, valid.col =  F, na.col = F, headings = F,
-                             graph.magnif = 1.5, style = "grid", 
+data2 <- data2 %>%  dplyr::select(-country_name)
+summarytools::dfSummary(data2,varnumbers = F, valid.col =  F, na.col = F, headings = F,graph.magnif = 1.5, 
                              silent = T,
-                             plain.ascii = F) %>% print_md()
+                             plain.ascii = F)
 
-#tab1$`Freqs (% of Valid)` <- NULL
+data2$`Freqs (% of Valid)` <- NULL
 ```
 
 ```{r descript table, results='asis', eval = F}
-print(tab1 , footnote = "Fuente: Elaboración propia en base a datos de tarea N°1 (n = 64)" )  
+print(data2 , footnote = "Fuente: Elaboración propia en base a datos de tarea N°1 (n = 64)" )  
 ```
 
 
-## Distribuciones bivariadas
+## 2. Distribuciones bivariadas
 
 ### Matriz de correlaciones de todas las variables 
 
 - y luego discutir significancia estadística
-```{r corr}
-data %>% dplyr::select(2:7) %>% 
-  correlation() %>%
-  summary() %>%
-  print_md(caption = "Matriz de correlaciones (R Pearson)", footer = "Nota: *** \\textit{p} < 0,001; ** \\textit{p} < 0,01; * \\textit{p} < 0,05.") 
+
+
+```{r corr }
+corr %>%
+  kableExtra::kable(., booktabs = T, caption = "Matriz de correlaciones (R Pearson)") %>% kableExtra::footnote(general_title = "Nota: ",general = "*** \\\\textit{p} < 0,01; ** \\\\textit{p} < 0,05; * \\\\textit{p} < 0,1.") %>% 
+    kableExtra::kable_styling(latex_options =c("scale_down"), position = "center")
 ```
 
+## 3. Gráficos de dispersión
 
-## Gráficos de dispersión
+Como se ve en la Figura...
 
-- Decir algo sobre la relación entre variables 
-
-```{r corrploti, fig.cap= "Gráfico de dispersión entre la tasa de crecimiento económico y el grado de apertura de comercio."}
+```{r corrploti, fig.cap= "Gráfico de dispersión entre la tasa de crecimiento económico y el grado de apertura de comercio.", fig.pos = 'H'}
 ggscatter(data, x = "tradeshare", y = "growth",
    add = "reg.line",
    add.params = list(color = "gray", fill = "lightgray"), 
    conf.int = TRUE, 
    cor.coef = TRUE, 
    cor.coeff.args = list(method = "pearson", label.sep = "\n")
-   ) + theme_economist() + scale_color_economist() + labs(x = "Grado de apertura de comercio (promedio, en PIB)", y = "Tasa crecimiento anual (PIB real)", title = "", caption = "Fuente: Elaboración propia en base a datos Tarea N°1")
+   ) + labs(x = "Grado de apertura de comercio (promedio, en PIB)", y = "Tasa crecimiento anual (PIB real)", title = "", caption = "Fuente: Elaboración propia en base a datos Tarea N°1") + theme_stata(base_size = 10, base_family = "sans", scheme = "s2color")
 ```
 
 
-```{r corrplot2, fig.cap= "Gráfico de dispersión entre la tasa de crecimiento económico y los años de educación de adultos"}
+```{r corrplot2, fig.cap= "Gráfico de dispersión entre la tasa de crecimiento económico y los años de educación de adultos", fig.pos='H'}
 ggscatter(data, x = "yearsschool", y = "growth",
    add = "reg.line",
    add.params = list(color = "gray", fill = "lightgray"), 
    conf.int = TRUE, 
    cor.coef = TRUE, 
    cor.coeff.args = list(method = "pearson", label.sep = "\n")
-   ) + theme_economist() + scale_color_economist() + labs(x = "Escolaridad adultos (años promedio)", y = "Tasa crecimiento anual (PIB real)", caption = "Fuente: Elaboración propia en base a datos Tarea N°1")
+   )  + labs(x = "Escolaridad adultos (años promedio)", y = "Tasa crecimiento anual (PIB real)", caption = "Fuente: Elaboración propia en base a datos Tarea N°1") + theme_stata(base_size = 10, base_family = "sans", scheme = "s2color")
 ```
 
-## Análisis de regresión lineal múltiple
+# Análisis de regresión
 
-- Interpretar estimación puntual de b1 y b2 y luego significancia estadística y economica 
+## 4. Análisis de regresión lineal múltiple
+
 ```{r est-model}
 model1 <- lm(growth ~ tradeshare + yearsschool + rev_coups + assasinations + rgdp60, data = data)
 
@@ -221,11 +234,11 @@ model1 <- lm(growth ~ tradeshare + yearsschool + rev_coups + assasinations + rgd
 
 ```{r, results="asis"}
 texreg::texreg(model1,
-               custom.gof.rows = list(" " = 1, 
+               groups = list(" " = 1, 
                                       "Determinante económico" = 2, 
                                       "Determinante social" = 3,
-                                      "Determinantes políticos" = 4,
-                                      "Control" = 5),
+                                      "Determinantes políticos" = 4:5,
+                                      "Control" = 6),
                custom.coef.names =  c("Intercepto",  "Grado de apertura comercio (promedio, en PIB)", "Escolaridad adultos (años promedio)",
                               "Hitos disruptivos (promedio anual)","Asesinatos políticos (promedio anual)",
                               "PIB per cápita (base 1960)"),
@@ -237,17 +250,14 @@ texreg::texreg(model1,
                include.fstatistic = T, 
                include.rmse = T,
                custom.model.names = "Modelo 1",
-               float.pos = "h")
+               float.pos = "H")
 ```
 
-```{r plot_model1, fig.cap= "Forest-plot con los coeficientes estimados del modelo de regresión que estima la tasa de crecimiento anual (PIB real)"}
-plot_model(model1, show.p = T) + labs(y="Coeficientes de regresión", caption = "Fuente: Elaboración propia en base a modelo N°1", title = "")
-```
+En términos formales tenemos las dos siguientes rectas de regresión, donde *(1)* indica la función de regresión poblacional que se busca estimar y *(2) con continuación en (3)* la función de regresión lineal estimada con Método de Mínimos Cuadrados Ordinarios. 
 
-
-**Rectas de regresión** 
 ```{r comprobation-model}
-rsq <- round(summary(model1)$r.squared,3)
+modeldata <- broom::augment(model1)
+rsq <- round(summary(model1)$r.squared,4)
 inter <- round(coef(model1)[1],3)[[1]]
 coef.trade <- round(coef(model1)[2],3)
 coef.sch <- round(coef(model1)[3],3)
@@ -273,74 +283,100 @@ m.df <- model1$df.residual
 **Función de Regresión Lineal Poblacional**
 
 
-$$
+\begin{align}
 \widehat{\text{growth}} = \beta_0 + (\beta_1 \cdot X_{\text{tradeshare}}) + (\beta_2 \cdot X_{\text{yearsschol}}) + (\beta_3 \cdot X_{\text{revcoups}}) + (\beta_4 \cdot X_{\text{assasinations}}) + (\beta_5 \cdot X_{\text{rgdp60}}) + u
-$$
-
-
+\end{align}
 
 
 **Función de Regresión Lineal Muestral**
 
+\begin{align}
+\widehat{\text{growth}} = `r inter` + (`r coef.trade` \cdot X_{\text{tradeshare}}) + (`r coef.sch` \cdot X_{\text{yearsschol}}) + (`r coef.rev` \cdot X_{\text{revcoups}}) + \\ (`r coef.assa` \cdot X_{\text{assasinations}}) + (`r coef.rgd` \cdot X_{\text{rgdp60}}) + u
+\end{align}
+
+
+Una forma gráfica de verlo en la *Figura*
+
+```{r plot_model1, fig.cap= "Forest-plot con los coeficientes estimados del modelo de regresión que estima la tasa de crecimiento anual (PIB real)"}
+plot_model(model1, show.p = T) + labs(y="Coeficientes de regresión", caption = "Fuente: Elaboración propia en base a modelo N°1", title = "")
+```
+
+
+
+## 5. Propiedades del Modelo de Regresión
+
+### 5.1 Suma de residuos 
+
+Uno de los supuestos importantes de *OLS*[^1] es que el valor esperado de los residuos es cero ($E(\hat{u})=0$), o en términos matriciales que la suma de los residuos $\hat{u}_i$ es igual a cero [^2]
+
 $$
-\widehat{\text{growth}} = `r inter` + (`r coef.trade` \cdot X_{\text{tradeshare}}) + (`r coef.sch` \cdot X_{\text{yearsschol}}) + (`r coef.rev` \cdot X_{\text{revcoups}}) + (`r coef.assa` \cdot X_{\text{assasinations}}) + (`r coef.rgd` \cdot X_{\text{rgdp60}}) + u
+E(u) = \sum\limits_{i=0}^n{\hat{u}_i} = `r round(sum(modeldata$residuals),3)`
 $$
 
-## Propiedades del Modelo de Regresión
-
-### Suma de residuos 
-
-Uno de los supuestos importantes de *OLS*[^1] es que el valor esperado de los residuos es cero ($E(\widehat{u})=0$), o en términos matriciales que la suma de los residuos $\widehat{u}_i$ es igual a cero [^2]
-
-$$
-E(u) = \sum\limits_{i=0}^n{\widehat{u}_i} = `r round(sum(modeldata$residuals),3)`
-$$
 [^1]: *Ordinary Least Squares*, o en español, Mínimo Cuadrado Ordinarios (*MCO*)
+
 [^2]: Para ser exactas el valor es `r sum(model1$residuals)`, valor muy pequeño que tiende a cero. 
 
-### Ortogonales a variables explicativas
+### 5.2 Ortogonales a variables explicativas
 
-Sea $\widehat{u}$ un vector *nx1* que denota los residuos y $X_{nxm}$ matriz de predictores del modelo que contiene a  $X_1, X_2, ..., X_k$ parámetros, diremos que la suma de residuos cuadrado (*SSR*) $\widehat{u}'\widehat{u}$ son ortogonales. Pero además, diremos que la matriz $\widehat{u}$ es ortogonal a las variables explicativas, lo que significa que hay una relación de independencia de los valores esperados de $\widehat{u}$ y $X$ (supuesto *MLR4* del Teorema de Gauss Markow para la estimación *OLS*)
+Sea $\hat{u}$ un vector *nx1* que denota los residuos y $X_{nxm}$ matriz de predictores del modelo que contiene a  $X_1, X_2, ..., X_k$ parámetros, diremos que la suma de residuos cuadrado (*SSR*) $\hat{u}'\hat{u}$ son ortogonales. Pero además, diremos que la matriz $\hat{u}$ es ortogonal a las variables explicativas, lo que significa que hay una relación de independencia de los valores esperados de $\hat{u}$ y $X$ (supuesto *MLR4* del Teorema de Gauss Markow para la estimación *OLS*)
 
 $$
-\widehat{u}'X = E(\widehat{u}|X) = 0 
+\hat{u}'X = E(\hat{u}|X) = 0 
 $$
 
 ```{r, echo= F}
-modeldata <- broom::augment(model1)
 modeldata %>%
-    pivot_longer(cols = 1:6) %>% 
-    group_by(name) %>% 
+  pivot_longer(cols = 1:6) %>% 
+  group_by(name) %>% 
     summarise(mean = mean(.resid)) %>%
-  filter(name != "growth") %>% 
-  kableExtra::kable(., col.names = c("Variables independientes ($X$)", "$E(u|X_i)$")) 
+  filter(name != "growth") %>%
+  kableExtra::kable(., booktabs = T, col.names = c("Variables independientes (X)", "E(u|X)"), caption = "Media condicional de variables independientes") %>% kableExtra::footnote(general_title = "Nota: ",general = "Los intervalos de confianza fueron calculados a un 95% de confianza") %>% 
+    kableExtra::kable_styling(latex_options =c("scale_down"), position = "center")
 
 ```
-Como modo de complementar este análisis, una forma convencional es la visualización de los residuos, dado ciertos parámetros de los modelos [^3]. Como se puede ver en la figura ...(aquí describir)
 
-
-```{r orthogonal, results='asis', fig.cap="Distribución de residuos para cada predictor del modelo"}
-plot_residuals(model1)
-```
+Como modo de complementar este análisis, una forma convencional es la visualización de los residuos, dado ciertos parámetros de los modelos [^3]. Como se puede ver en las figuras del Apéndice ...(aquí describir)
 
 
 [^3]: [Recomendación de visualización de la relación entre residuos y valores predichos en STATA](https://online.stat.psu.edu/stat501/book/export/html/912)
 
-### Promedio de la variable dependiente coincide con promedio de variable dependiente estimada
+### 5.4  Promedio de la variable dependiente coincide con promedio de variable dependiente estimada
 
-Por ley de esperanzas iteradas decimos que  $E(y_i) = E[E(y_i|X)]$, donde $E(y_i|X)$ representa el valor esperado de *y* que ha sido estimado a partir de un cambio en $X$, manteniendo lo demas constante (en otras palabras $\widehat{y}$ estimado). 
+Por ley de esperanzas iteradas decimos que  $E(y_i) = E[E(y_i|X)]$, donde $E(y_i|X)$ representa el valor esperado de *y* que ha sido estimado a partir de un cambio en $X$, manteniendo lo demas constante (en otras palabras $\hat{y}$ estimado). 
 
-Luego, calculamos la media de $\widehat{y}$ en los datos del modelo, obteniendo `r round(mean(modeldata$.fitted),5)`. Mientras que, tal como reportamos en el *Cuadro 1* la media de la tasa de crecimiento en la muestra es `r round(mean(data$growth),5)`
+Luego, calculamos la media de $\hat{y}$ en los datos del modelo, obteniendo `r round(mean(modeldata$.fitted),5)`. Mientras que, tal como reportamos en el *Cuadro 1* la media de la tasa de crecimiento en la muestra es `r round(mean(data$growth),5)`
 
-### Comprobar coeficiente determinación $R^2$ es igual al cuadrado del coeficiente de correlacion entre variable dependiente y estimada. 
+### 5.5 Comprobar coeficiente determinación $R^2$ es igual al cuadrado del coeficiente de correlacion entre variable dependiente y estimada. 
 
-Según Wooldrige (2019) $R^2$ se puede mostrar como el cuadrado del coeficiente de coorelaci´´on entre las $y_i$ reales y los valores ajustados de $\widehat{y}_i$. Formalmente
+Según Wooldrige (2019) $R^2$ se puede mostrar como el cuadrado del coeficiente de correlación entre las $y_i$ reales y los valores ajustados de $\hat{y}_i$ ($\rho_{y_i, \hat{y}}$). Formalmente
 
-$$
-R^2 = \frac{(\sum\limits_{i=0}^n{(y_i - \widehat{y})(\widehat{y}_i - \bar{\widehat{y}})})^2}{{\sum\limits_{i=0}^n{(y_i - \widehat{y})^2}}\cdot{(\widehat{y}_i - \bar{\widehat{y}})}^2}}
-$$
+\begin{align}
+R^2 = \frac{(\sum\limits_{i=1}^n{(y_i - \hat{y})(\hat{y}_i - \bar{\hat{y}})})^2}{{\sum\limits_{i=1}^n{(y_i - \hat{y})^2}}\cdot \sum\limits_{i=1}^n(\hat{y_i} - \bar{\hat{y}})^2} = (\rho_{y_i, \hat{y}})^2
+\end{align}
 
-## Marginal effects 
+Primero, se debe notar que se ha utilizado la notación del promedio de las $\hat{y_i}$ para ser fiel a la fórmula del coeficiente de correlación, pero sabemos que el promedio es igual a las $\bar{y}$ debido a que el promedio muestral de los residuos es cero y $y_i= \hat{y_i} + \hat{u_i}$. 
+
+Luego, 
+
+\begin{align}
+\sum\limits_{i=1}^n{(y_i - \hat{y})(\hat{y}_i - \bar{\hat{y}})} = cov(y_i, \hat{y}) =`r cov(modeldata$growth, modeldata$.fitted)`\\
+\sum\limits_{i=1}^n{(y_i - \hat{y})^2} = \sigma_{y_i} = `r sd(modeldata$growth)`\\
+\sum\limits_{i=1}^n(\hat{y_i} - \bar{\hat{y}})^2 = \sigma_{y_i} = `r sd(modeldata$.fitted)`
+\end{align}
+
+Si reemplazamos
+
+\begin{align*}
+R^2 = \frac{(`r cov(modeldata$growth, modeldata$.fitted)`))^2}{`r sd(modeldata$growth)`\cdot `r sd(modeldata$.fitted)`} = (`r cov(modeldata$growth, modeldata$.fitted)*cov(modeldata$growth, modeldata$.fitted)/(sd(modeldata$growth)*sd(modeldata$.fitted))`)^2 = `r cov(modeldata$growth, modeldata$.fitted)*cov(modeldata$growth, modeldata$.fitted)/(sd(modeldata$growth)*sd(modeldata$.fitted))^2`
+\end{align*}
+
+Como podemos ver, el resultado indicado se corresponde con el $R^2$ reportado en el *Cuadro 2*, esto es, que el $R^2$ es `r rsq`
+
+## 6. Efectos marginales
+
+Vuelva a graficar las relaciones de la pregunta 3, pero ahora incluya en sus gráficos las predicciones del modelo 1 ¿diría que son significativas?
+
 ```{r marginal1, results='asis', fig.cap="Valores predichos para la tasa de crecimiento anual (en PIB) según grado de apertura del comercio (PIB promedio)"}
 plot_model(model1, type = "pred", terms = c("tradeshare"), title = "")
 ```
@@ -350,22 +386,48 @@ plot_model(model1, type = "pred", terms = c("tradeshare"), title = "")
 plot_model(model1, type = "pred", terms = c("yearsschool"), title = "")
 ```
 
-## Global significance model
+## 7. Significancia global del modelo
 
-- Estadístico F
-- Demostrar que R es igual a F
+Sabemos que el estadístico F (aquí describir), se define como
 
-## Predicción
+\begin{align}
+F_{(F,k, gl)} = \frac{(SSC_r - SSC_{nr})/q}{SSC_{nr}/(n-k-1)}
+\end{align}
 
-Se calcularán dos predicciones de la tasa de crecimiento ($\widehat{growth}$) a partir de los resultados obtenidos en el *modelo 1*.
+Donde $SSR$ indica la suma de residuos cuadrados, $n$ el número de observaciones del modelo, $k$ el número de parámetros ($gl= n-k-1$) y $q$ el número de restricciones. Los súbíndices *r* y *nr* indican el modelo con restricciones $q$ en parámetros y sin restricciones, respectivamente. 
 
-### Predicción en base a la media de los predictores
+En el *Cuadro 2* podemos ver el resultado del estadístico $F$ en términos globales, es decir, se compara el *modelo 1* con un modelo sin predictores (*modelo nulo*). El valor reportado es *F(`r summary(model1)$fstatistic`)*, donde la primera coordenada indica el valor observado de F (*F, k, gl*). A partir de estos valores se puede obtener su *valor-p* que es *0.001028* el que nos indica que (...)
 
-La primera predicción considera los valores promedio ($\bar{X}$) de cada uno de los predictores. Formalmente tenemos que
 
-\begin{align*}
-\widehat{\text{growth}} = `r inter` + (`r coef.trade` \cdot \bar{X}_{tradeshare}) + (`r coef.sch` \cdot \bar{X}_{yearsschol}) + (`r coef.rev` \cdot \bar{X}_{revcoups}) + (`r coef.assa` \cdot \bar{X}_{assasination}) + (`r coef.rgd` \cdot \bar{X}_{rgdp60}) + u
-\end{align*}
+A su vez, sabemos que si el estadístico *F* es calculado a partir de la suma de residuos cuadrados, y el coeficiente de determinación *R^2* lo podemos calcular como $R^2 = 1- \frac{SSR}{SST}$, donde $SST$ es la suma total de los residuos, podemos decir que
+
+\begin{align}
+F_{(q,k, gl)} = \frac{(R^2_{nr} - R^2_{r})/q}{1- R^2_{nr}/(n-k-1)}
+\end{align}
+
+Recordemos que dado que el $R^2_{r}$ no tiene predictores, este es cero
+
+\begin{align}
+F_{(q,k, gl)} = \frac{(R^2_{nr}/k}{1- R^2_{nr}/(n-k-1)}
+\end{align}
+
+$$
+F_{(q,k, gl)} = \frac{(`r rsq`)/5}{1- `r rsq`/(64-5-1)} = 4.763
+$$
+
+Se puede concluir de $R^2$ que (...)
+
+## 8. Predicción
+
+Se calcularán dos predicciones de la tasa de crecimiento ($\widehat{growth}$) a partir de los resultados obtenidos en el *modelo 1*. Luego de ello, se discutirá si estas predicciones son significativamente distintas
+
+## 8.1 Predicción en base a la media de los predictores
+
+La primera predicción considera los valores promedio ($\bar{X}$) de cada uno de los parámetros incorporados en el modelo. Formalmente tenemos que
+
+\begin{align}
+\widehat{\text{growth}} = `r inter` + (`r coef.trade` \cdot \bar{X}_{tradeshare}) + (`r coef.sch` \cdot \bar{X}_{yearsschol}) + (`r coef.rev` \cdot \bar{X}_{revcoups})\\ + (`r coef.assa` \cdot \bar{X}_{assasination}) + (`r coef.rgd` \cdot \bar{X}_{rgdp60}) + u
+\end{align}
 
 Donde valores esperados fueron tomados del *Cuadro 1*
 \begin{align*}
@@ -378,72 +440,156 @@ Donde valores esperados fueron tomados del *Cuadro 1*
 
 Con ello obtenemos
 
-
 ```{r}
 pred1 <- inter + coef.trade*mean(data$tradeshare) + coef.sch*mean(data$yearsschool) + coef.rev*mean(data$rev_coups) + coef.assa*mean(data$assasinations) + coef.rgd*mean(data$rgdp60)    
 ```
 
-$$
-\widehat{\text{growth}_1} = `r inter` + `r coef.trade` \cdot `r round(mean(data$tradeshare),3)`+ `r coef.sch` \cdot `r round(mean(data$yearsschool),3)` + `r coef.rev` \cdot `r round(mean(data$rev_coups),3)`+ `r coef.assa` \cdot `r round(mean(data$assasinations),3)` + `r coef.rgd` \cdot `r round(mean(data$rgdp60),3)` =  `r pred1`
-$$
+\begin{align*}
+\widehat{\text{growth}_1} = `r inter` + `r coef.trade` \cdot `r round(mean(data$tradeshare),3)`+ `r coef.sch` \cdot `r round(mean(data$yearsschool),3)` + `r coef.rev` \cdot `r round(mean(data$rev_coups),3)`+ `r coef.assa` \cdot `r round(mean(data$assasinations),3)` + `r coef.rgd` \cdot `r round(mean(data$rgdp60),3)` =  `r round(pred1,3)`
+\end{align*}
 
-### Predicción en base a la media de predictores y dos desviaciones estándar de *tradeshare*
+## 8.2 Predicción en base a la media de predictores y dos desviaciones estándar de *tradeshare*
 
 Segundo, se realizará una predicción del crecimiento ($\widehat{growth_2}$) con los valores promedios para todas las variables, excepto para *tradeshare* que toma un valor igual a dos desviaciones estándar por encima de la media. Esto significa que $\bar{X}_{tradeshare} + 2\sigma_{tradeshare}$
 
 ```{r}
-pred2 <- inter + coef.trade*mean(data$tradeshare)+ 2*sd(data$tradeshare) + coef.sch*mean(data$yearsschool) + coef.rev*mean(data$rev_coups) + coef.assa*mean(data$assasinations) + coef.rgd*mean(data$rgdp60)    
+pred2 <- inter + coef.trade*(mean(data$tradeshare)+ 2*sd(data$tradeshare)) + coef.sch*mean(data$yearsschool) + coef.rev*mean(data$rev_coups) + coef.assa*mean(data$assasinations) + coef.rgd*mean(data$rgdp60)    
 ```
 
 $$
 \widehat{\text{growth}_2} = `r inter` + `r coef.trade` \cdot `r round(mean(data$tradeshare) + 2*sd(data$tradeshare),3)`+ `r coef.sch` \cdot `r round(mean(data$yearsschool),3)` + `r coef.rev` \cdot `r round(mean(data$rev_coups),3)`+ `r coef.assa` \cdot `r round(mean(data$assasinations),3)` + `r coef.rgd` \cdot `r round(mean(data$rgdp60),3)` =  `r pred2`
 $$
 
+## 8.3 Comparación de predicciones
 
-Ahora veremos si estas estimaciones son significativamente distintas. Para ello testearemos la $H_0$ que indica que no hay diferencias significativas entre la predicción con los valores promedio y aquella que considera para *tradeshare* un valor sobre dos desviaciones estándar de su media. 
+Ahora veremos si estas estimaciones son significativamente distintas. Primero, podemos evaluar esto con el siguiente cuadro resumen en donde claramente se evidencia que los intervalos de confianza se *"solapan"*
 
-Como podemos ver en el resultado, no hay evidencia suficiente para rechazar $H_0$, por lo que no se puede plantear de manera certera que a nivel poblacional ambas predicciones sean estadísticamente distintas. 
-```{r}
-summary(glht(model1, linfct = c("tradeshare = 0.9990572"))) 
-```
+En resumen entre ambas predicciones tenemos la siguiente tabla
 
-## Estimación del cambio en el crecimiento en base a cambio educativo
+| Predicción | $\hat{y}$ | *se* | t | $P > \|t\|$ | lim. inferior | lim. superior |
+|---|---|---|---|---|---|---|
+| $\hat{growth}_1$ | 1.86912 | .199211 | 9.38 | 0.000 | 1.470356 | 2.267884 |
+| $\hat{growth}_2$ | 2.481425 | .4815638 | 5.15 | 0.000 | 1.517471 | 3.44538 |
 
-Estime el cambio en la tasa de crecimiento que predice el MODELO 1 para un país que en
-1960 implementó una política educativa que permitió aumentar la escolaridad promedio de
-4 a 6 años, y luego refiérase a la significancia estadística y económica.
+Table: Predicciones lineales (*xb*) del MRL de tasa de crecimiento
+
+*Nota*: *se* (error estándar) calculado con método delta y los límites del intervalo de predicción con un 95% de confianza.
+
+Para estar más seguras de esta afirmación, testeamos la $H_0$ que indica que no hay diferencias significativas entre la predicción con los valores promedio y aquella que considera para *tradeshare* un valor sobre dos desviaciones estándar de su media.
+Como podemos ver en el resultado del análisis de comparación entre esas dos combinaciones lineales [^margins], no hay evidencia suficiente para rechazar $H_0$, por lo que **no** se puede plantear de manera certera que a nivel poblacional ambas predicciones sean estadísticamente distintas (*p > 0.05*)
+
+|  | lincom | pvalue | ll | ul |
+|---|---|---|---|---|
+|  | -0.612 | 0.168 | -1.490   | 0.265 |
+
+Table: Test de combinación lineal (*mlincom*)
+
+[^margins]: Multiple Linear Combinations with *margins* in [STATA](https://www.statalist.org/forums/forum/general-stata-discussion/general/1551533-new-on-ssc-mlincom-multiple-linear-combinations-of-parameters)
+
+## 9. Estimación del cambio en el crecimiento en base a cambio educativo
+
+Estime el cambio en la tasa de crecimiento que predice el MODELO 1 para un país que en 1960 implementó una política educativa que permitió aumentar la escolaridad promedio de 4 a 6 años, y luego refiérase a la significancia estadística y económica.
 
 ```{r tab predictions-9}
-make_predictions(model1, pred = "yearsschool", pred.values = c(4,6)) %>% kableExtra::kable(., col.names = c("Tasa crecimiento", "Grado apertura", "Hitos disruptivos", "Asesinatos políticos", "PIB 1960", "Años de escolaridad promedio", "Intervalo superior", "Intervalo inferior"), caption = "Valores predichos para la tasa de crecimiento (en PIB) según años de escolaridad promedio 4 y 6 años") %>% kableExtra::footnote(general = "Nota: Los intervalos de confianza fueron calculados a un 95% de confianza")
+make_predictions(model1, pred = "yearsschool", pred.values = c(4,6)) %>% kableExtra::kable(., booktabs = T, col.names = c("Tasa crecimiento", "Grado apertura", "Hitos disruptivos", "Asesinatos políticos", "PIB 1960", "Años de escolaridad promedio", "Intervalo superior", "Intervalo inferior"), caption = "Valores predichos para la tasa de crecimiento (en PIB) según años de escolaridad promedio 4 y 6 años") %>% kableExtra::footnote(general = "Los intervalos de confianza fueron calculados a un 95% de confianza", general_title = "Nota:") %>% kableExtra::kable_styling(latex_options =c( "scale_down"), position = "center")
 ```
 
+También lo podemos ver gráficamente (...)
 
 ```{r effect plot, fig.cap= "Gráfico de valores predichos para la tasa de crecimiento según los años de escolaridad promedio. *Nota*: La línea roja marca los años de escolaridad en 4 y la azul en 6"}
 effect_plot(model1, pred = "yearsschool", interval = TRUE, plot.points = TRUE) +
   geom_vline(aes(xintercept = 6),color = "darkblue", linetype = "dashed", size = 1) +
   geom_vline(aes(xintercept = 4),color = "darkred", linetype = "dashed", size = 0.8) +
-  labs(x = "Escolaridad adultos (años promedio)", y ="Tasa crecimiento anual (PIB real)")+
-  theme_economist() + scale_fill_economist()
+  labs(x = "Escolaridad adultos (años promedio)", y ="Tasa crecimiento anual (PIB real)") + theme_stata(base_size = 10, base_family = "sans", scheme = "s2color")
 ```
 
 
 $$\triangle\widehat{growth} = \triangle\bar{X}_{yearsschool}\\
-E(growth|yearsschool =6)$$
+\cdot E(growth|yearsschool =6)$$
 
-* Importante: control estadístico
+* Importante: no olvidar hablar de control estadístico
 
-## Significancia conjunta
+## 10. Significancia conjunta
 
-Evalúe la significancia conjunta de las variables tradeshare, rev_coups y assasinations, y luego
-compruebe que el estadístico F reportado por STATA puede obtenerse a partir de la
-diferencia en la suma de cuadrados residuales de un modelo restringido y la de un modelo
-sin restringir.
+Para evaluar la significancia conjunta de determinados predictores, se compara la diferencia entre el modelo original (modelo sin restricciones) y el modelo sin las variables de interés (modelo restringido). Sea  $\hat\beta_{tradeshare}$, $\hat\beta_{revcoups}$, $\hat\beta_{assasinations}$ los coeficientes de las variables *tradeshare*, *rev_coups* y *assasinations*, diremos que 
+
+$$
+H_0: \hat\beta_{tradeshare} \lor \hat\beta_{revcoups} \lor \hat\beta_{assasinations} = 0\\
+H_1: \hat\beta_{tradeshare} \lor \hat\beta_{revcoups} \lor \hat\beta_{assasinations} \neq 0\\
+$$
+
+El estadístico que nos permitió hacer ese contraste es el *estadístico F*, cuyos resultados indican que *F(3,58) = 2.38* (*p = 0.0787*).
+Ahora bien,  como habíamos definido antes este también se puede calcular como $$F_{(q,k, gl)} = \frac{(SSC_r - SSC_{nr})/q}{SSC_{nr}/(n-k-1)}$$
+
+Donde, cada parámetro indica
+
+- $SSC$, suma de residuales cuadrados
+- Subíndices $nr$ y $r$ que indican estadísticos sin restricciones y con restricciones, respectivamente
+- $q$, número de restricciones que son **3**
+- $k$, número de parámetros del modelo sin restringir que son **5**
+- $n$, número de observaciones del modelo, *64*
+- $gl$, grados de libertad que se calculan como *n-k-1* e indica el denominador del estadístico.
+
+Luego, volviendo a estimar un segundo modelo restringido (*modelo2*) y obtenemos que $SSC_r=165.462195$. En consecuencia como podemos ver obtenemos el mismo valor que en el *software*
+
+$$
+\hat{F}_{(3,5, 58)} = \frac{(165.462195 - 147.310823)/(3)}{147.310823/(58)} = 2.38
+$$
+
+Cuando comparamos este $\hat{F}_(3,5,58)$ observado con el valor crítico o teórico a un 95% de confianza podemos ver que el valor va entre 2.76 ($F_{(3,60)}$) y 2.79 ($F_{(3,50)}$). Luego,
+
+$$
+|\hat{F}_{(3,5, 58)}| < \hat{F}_{(3,60)} \Longrightarrow \hat\beta_{tradeshare} \lor \hat\beta_{revcoups} \lor \hat\beta_{assasinations} \neq 0
+$$ 
+
+Lo que indica que no se puede rechazar la hipótesis nula que el modelo restringido es estadísticamente distinto al modelo restringido. A partir de la fórmula que considera la suma de residuos al cuadrado podemos recoger que la suma de residuos entre el modelo con esos predictores y sin esos predictores no es lo suficientemente grande como para producir una diferencia significativa entre los modelos. En otras palabras, la incorporación de estas variables al modelo original (o sin restringir) no produce un mejor ajuste entre los valores observados y predichos.
+
+En segunda instancia, es importante recordar que este tipo de pruebas estadísticas refieren a un *conjunto* de predictores. Por ello, no estimamos *qué predictor **específicamente** no aporta de manera sustantiva al modelo. A su vez, este tipo de pruebas tienen un significado estadístico relevante cuando existe una alta correlación entre variables, algo que no se cumple entre las variables incorporadas en la restricción pero *sí* en aquellas que fueron conservadas (recordemos lo que aparece en la matriz de correlaciones donde años de educación y PIB en 1960 correlacionan alta y significativamente en *r = 0.83*). 
+
+\newpage
+
+# Referencias
+
+# Apéndice
+
+## Apéndice A
+
+En este apartado se encuentra incorporado el código de análisis en STATA y los links de archivos para la construcción del reporte en *LateX*
+
+### Código en STATA (*.dofile*)
+
+En el siguiente apartado se puede encontrar el archivo dofile con el cuál fue generado este reporte. También se puede acceder en el [siguiente link a un repositorio en GitHub que contiene el .dofile y .tex para construir el reporte el LateX.](https://github.com/valentinaandrade/econometrics)
+
+### Otro recursos del informe
 
 
 
-# Apéndice 
+## Apéndice B
 
-## Visualización de propiedades 
+### Valor esperado de residuos condicional a predictores
+
+```{r orthogonal1, results='asis', fig.cap="Distribución de residuos para cada predictor del modelo"}
+plot_residuals(model1, remove.estimates = c("yearsschool", "rev_coups", "assasinations", "rgdp60")) + labs(caption = "Fuente: Elaboración propia en base a datos Tarea N°1")
+```
+
+```{r orthogonal2, results='asis', fig.cap="Distribución de residuos para cada predictor del modelo"}
+plot_residuals(model1, remove.estimates = c("tradeshare", "rev_coups", "assasinations", "rgdp60")) + labs(caption = "Fuente: Elaboración propia en base a datos Tarea N°1")
+```
+
+```{r orthogonal3, results='asis', fig.cap="Distribución de residuos para cada predictor del modelo"}
+plot_residuals(model1, remove.estimates = c("tradeshare","yearsschool", "assasinations", "rgdp60")) + labs(caption = "Fuente: Elaboración propia en base a datos Tarea N°1")
+```
+
+```{r orthogonal4, results='asis', fig.cap="Distribución de residuos para cada predictor del modelo"}
+plot_residuals(model1, remove.estimates = c("tradeshare","yearsschool", "rev_coups", "rgdp60")) + labs(caption = "Fuente: Elaboración propia en base a datos Tarea N°1")
+```
+
+```{r orthogonal5, results='asis', fig.cap="Distribución de residuos para cada predictor del modelo"}
+plot_residuals(model1, remove.estimates = c("tradeshare","yearsschool", "rev_coups", "assasinations")) + labs(caption = "Fuente: Elaboración propia en base a datos Tarea N°1")
+```
+
+### Visualización de propiedades de Gauss Markow y MCL
+
 ```{r model, results='asis'}
 plot_model(model1, type = "resid")
 plot_model(model1, type = "diag")
