@@ -41,13 +41,19 @@
 
 // b. Figuras
 	graph twoway histogram growth, density xaxis(1 2) 	subtitle("Distribución de la Tasa de crecimiento") note("Fuente: Elaboración propia en base a datos tarea N°1") ytitle(" ") saving("graph1.png")
+	graph export "output/figure01.jpg"
 	graph twoway histogram tradeshare, density xaxis(1 2) 	subtitle("Distribución de la apertura económica") note("Fuente: Elaboración propia en base a datos tarea N°1") ytitle(" ")
+		graph export "output/figure02.jpg"
 	graph twoway histogram growth, density xaxis(1 2) 	subtitle("Distribución de los años de escolaridad") note("Fuente: Elaboración propia en base a datos tarea N°1") ytitle(" ")
+		graph export "output/figure03.jpg"
 
 // c. Adicionales
 	graph twoway histogram rev_coups, frequency  xaxis(1 2) 	subtitle("Frecuencia de hitos disruptivos") note("Fuente: Elaboración propia en base a datos tarea N°1") ytitle(" ")
+		graph export "output/figure04.jpg"
 	graph twoway histogram assasinations, frequency  xaxis(1 2) 	subtitle("Frecuencia de asesinatos políticos") note("Fuente: Elaboración propia en base a datos tarea N°1") ytitle(" ")
+		graph export "output/figure05.jpg"
 	graph twoway histogram rgdp60, density xaxis(1 2) 	subtitle("Distribución PIB en 1960") note("Fuente: Elaboración propia en base a datos tarea N°1") ytitle(" ")
+		graph export "output/figure06.jpg"
 
 	
 // Pregunta 2: Correlaciones
@@ -60,30 +66,40 @@
 	asdoc pwcorr growth tradeshare yearsschool rev_coups assasinations rgdp60, saving("correlation.doc") star(all) replace nonum
 	
 // Pregunta 3: Scatter plot
-	graph twoway (scatter growth tradeshare) (lfitci growth tradeshare) subtitle("Correlación entre crecimiento y apertura económica") note("Fuente: Elaboración propia en base a datos tarea N°1") ytitle(" ")
-		graph twoway (scatter growth tradeshare) (lfitci growth yearsschool) subtitle("Correlación entre crecimiento y años de escolaridad") note("Fuente: Elaboración propia en base a datos tarea N°1") ytitle(" ")
-	
+	graph twoway (scatter growth tradeshare)(lfitci growth tradeshare) //subtitle("Correlación entre crecimiento y apertura económica") note("Fuente: Elaboración propia en base a datos tarea N°1") ytitle(" ")
+		graph export "output/figure1.jpg"
+	graph twoway (scatter growth yearsschool)(lfitci growth yearsschool) //subtitle("Correlación entre crecimiento y anos de educacion") note("Fuente: Elaboración propia en base a datos tarea N°1") ytitle(" ")
+		graph export "output/figure2.jpg"
+
 // Pregunta 4: Regresiones
 
-
 ** a. Estimacion
-	regress growth tradeshare yearsschool rev_coups assasinations rgdp60
+	regress growth tradeshare yearsschool rev_coups assasinations rgdp60 //tablas en latex abajo
 	estimate store modelo1 //*ocuparlo despues
 	estat vce // Para ver su matriz de correlaciones estimada 
-	
-** a.1 Coeficientes parcializados
+
+** Graficos adicionales	
+** a.1 Coeficientes parcializados 
 	estimates restore modelo1
 	estat summarize //,labels
 	avplot  tradeshare
     avplot  yearsschool
 	avplot rev_coups
 	avplot assasinations
-	
+	graph export "output/figure-anexos.jpg"
+**a.2 Forestplot
+	margins, dydx(*) post
+	marginsplot, horizontal xline(0) yscale(reverse) recast(scatter)
+*** En base a guia de https://www.stata.com/meeting/germany14/abstracts/materials/de14_jann.pdf
+	estimates restore modelo1
+	coefplot, drop(_cons) xline(0) xtitle("Coeficientes de regresion")
+	graph export "output/figure-plot.jpg"
 
+			
 * b. Test ajuste
 	test tradeshare yearsschool rev_coups assasinations rgdp60 //  Con esto se compara F y R cuadrado.
 
-** b.1 Graficos diagnostico
+** b.1 Graficos diagnostico (en apendice B en informe)
 	rvfplot, yline(0)
 	qnorm growth
 	pnorm tradeshare
@@ -111,7 +127,7 @@
 	reg rev_coups growth
 	predict u_rev_coups, r
 
-** Residuos assasinations
+<** Residuos assasinations
 	reg assasinations growth
 	predict u_assasinations, r
 	
@@ -164,7 +180,10 @@ display 0.5396^2
 	estimates restore modelo1
 	predict pred
 	twoway lfitci growth tradeshare
+	graph export "output/figure5.jpg"
 	twoway lfitci growth yearsschool
+	graph export "output/figure6.jpg"
+
 
 // Pregunta 7: F a partir de R^2 
 //F= \frac{rsq/5}{1-rsq/(64-5-1)} = 4.763
