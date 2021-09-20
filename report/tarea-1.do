@@ -45,7 +45,7 @@
 	graph twoway histogram tradeshare, density xaxis(1 2) 	subtitle("Distribución de la apertura económica") note("Fuente: Elaboración propia en base a datos tarea N°1") ytitle(" ")
 		graph export "output/figure02.jpg"
 	graph twoway histogram growth, density xaxis(1 2) 	subtitle("Distribución de los años de escolaridad") note("Fuente: Elaboración propia en base a datos tarea N°1") ytitle(" ")
-		graph export "output/figure07.jpg"
+		graph export "output/figure03.jpg"
 
 // c. Adicionales
 	graph twoway histogram rev_coups, frequency  xaxis(1 2) 	subtitle("Frecuencia de hitos disruptivos") note("Fuente: Elaboración propia en base a datos tarea N°1") ytitle(" ")
@@ -90,7 +90,7 @@
 **a.2 Forestplot
 	margins, dydx(*) post
 	marginsplot, horizontal xline(0) yscale(reverse) recast(scatter)
-*** En base a guia de https://www.stata.com/meeting/germany14/abstracts/materials/de14_jann.pdf (No olvidar el install install coefplot)
+*** En base a guia de https://www.stata.com/meeting/germany14/abstracts/materials/de14_jann.pdf
 	estimates restore modelo1
 	coefplot, drop(_cons) xline(0) xtitle("Coeficientes de regresion")
 	graph export "output/figure-plot.jpg"
@@ -127,7 +127,7 @@
 	reg rev_coups growth
 	predict u_rev_coups, r
 
-** Residuos assasinations
+<** Residuos assasinations
 	reg assasinations growth
 	predict u_assasinations, r
 	
