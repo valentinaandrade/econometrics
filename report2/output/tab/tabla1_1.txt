@@ -2,16 +2,15 @@
 		modelo1_n	modelo1_i	modelo1_o
 VARIABLES	LABELS	log PIB por trabajador 1985	log PIB por trabajador 1985	log PIB por trabajador 1985
 				
-ln_yl85	log PIB por trabajador 1985	.	.	.
-		[.]	[.]	[.]
-ln_sk	tasa de inversion capital fisico	-1.200***	-1.144***	-0.869***
-		[-17.814]	[-14.755]	[-7.668]
-ln_ngdelta	tasa crecimiento, cambio tecnologico y depreciacion	-0.627	-0.759*	-0.237
-		[-1.545]	[-1.979]	[-0.537]
-Constant	Constant	-5.478***	-5.196***	-0.628
-		[-5.450]	[-5.524]	[-0.396]
+ln_sk	Inversion capital fisico	1.424***	1.318***	0.500
+		[0.143]	[0.171]	[0.434]
+ln_ngdelta	Crecimiento, cambio tecnologico y depreciacion	-1.990***	-2.017***	-0.742
+		[0.563]	[0.534]	[0.852]
+Constant	Constant	5.430***	5.346***	8.021***
+		[1.584]	[1.543]	[2.518]
 				
 Observations		98	75	22
-Adjusted R-squared		0.808	0.813	0.742
-Note: Run on 28 Oct 2021		using data from input\base_tarea2.dta	using data from input\base_tarea2.dta	using data from input\base_tarea2.dta
+Adjusted R-squared		0.592	0.588	0.012
+Note: Run on 28 Oct 2021 using data from input\base_tarea2.dta				
+Standard errors in brackets				
 *** p<0.01, ** p<0.05, * p<0.1				

@@ -1,21 +1,20 @@
 		(1)	(2)	(3)
 		modelo3_2_n	modelo3_2_i	modelo3_2_o
-VARIABLES	LABELS	ln_yl85_60	ln_yl85_60	ln_yl85_60
+VARIABLES	LABELS	log PIB por trabajador inicial-final	log PIB por trabajador inicial-final	log PIB por trabajador inicial-final
 				
-ln_yl85_60	ln_yl85_60	.	.	.
-		[.]	[.]	[.]
-ln_yl60	log PIB por trabajador 1960	-0.543***	-0.604***	-0.588***
-		[-6.185]	[-6.499]	[-4.452]
-ln_ngdelta	tasa crecimiento, cambio tecnologico y depreciacion	-0.524*	-0.547*	-0.720*
-		[-1.750]	[-1.843]	[-1.963]
-ln_sk	tasa de inversion capital fisico	-0.487***	-0.511***	-0.302
-		[-5.207]	[-4.730]	[-1.669]
-ln_sh	tasa de acumulacion capital humano	0.308***	0.324***	0.254*
-		[5.272]	[4.033]	[1.742]
-Constant	Constant	-0.636	-0.385	1.163
-		[-0.695]	[-0.371]	[0.845]
+ln_yl60	log PIB por trabajador 1960	-0.288***	-0.366***	-0.398***
+		[0.062]	[0.067]	[0.070]
+ln_ngdelta	Crecimiento, cambio tecnologico y depreciacion	-0.506*	-0.545*	-0.863**
+		[0.289]	[0.288]	[0.338]
+ln_sk	Inversion capital fisico	0.524***	0.538***	0.332*
+		[0.087]	[0.102]	[0.173]
+ln_sh	Acumulacion capital humano	0.231***	0.270***	0.228
+		[0.059]	[0.080]	[0.145]
+Constant	Constant	3.022***	3.709***	2.755**
+		[0.827]	[0.909]	[1.201]
 				
 Observations		98	75	22
-Adjusted R-squared		0.422	0.403	0.636
-Note: Run on 28 Oct 2021		using data from input\base_tarea2.dta	using data from input\base_tarea2.dta	using data from input\base_tarea2.dta
+Adjusted R-squared		0.463	0.435	0.651
+Note: Run on 28 Oct 2021 using data from input\base_tarea2.dta				
+Standard errors in brackets				
 *** p<0.01, ** p<0.05, * p<0.1				

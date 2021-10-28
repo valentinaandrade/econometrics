@@ -1,15 +1,14 @@
 		(1)	(2)	(3)
 		modelo3_1_n	modelo3_1_i	modelo3_1_o
-VARIABLES	LABELS	ln_yl85_60	ln_yl85_60	ln_yl85_60
+VARIABLES	LABELS	log PIB por trabajador inicial-final	log PIB por trabajador inicial-final	log PIB por trabajador inicial-final
 				
-ln_yl85_60	ln_yl85_60	.	.	.
-		[.]	[.]	[.]
 ln_yl60	log PIB por trabajador 1960	0.094*	-0.004	-0.341***
-		[1.901]	[-0.077]	[-4.344]
+		[0.050]	[0.055]	[0.079]
 Constant	Constant	-0.267	0.588	3.686***
-		[-0.702]	[1.357]	[5.382]
+		[0.380]	[0.433]	[0.685]
 				
 Observations		98	75	22
 Adjusted R-squared		0.026	-0.014	0.460
-Note: Run on 28 Oct 2021		using data from input\base_tarea2.dta	using data from input\base_tarea2.dta	using data from input\base_tarea2.dta
+Note: Run on 28 Oct 2021 using data from input\base_tarea2.dta				
+Standard errors in brackets				
 *** p<0.01, ** p<0.05, * p<0.1				
