@@ -56,12 +56,12 @@ data <- sjlabelled::set_label(data, c("Identificador numérico del país",
 ## ln(s) = ln(I/Y) = ln(i/rgdpw85)
 ## ln(n+g+ delta) = ln(pop + 0.05)
 
-data2 <- data %>%
+data <- data %>%
   mutate(ln_yl85 = log(rgdpw85),
          ln_yl60 = log(rgdpw60),
          i_n = i_y/100,
          pop_n = popgrowth/100) %>% 
-  mutate(ln_sk = log(i_n/ rgdpw85),
+  mutate(ln_sk = log(i_n),
     ln_ngdelta = log(pop_n + 0.05),
     school_n = school/100, # para pregunta2
     ln_sh = log(i/school_n))
