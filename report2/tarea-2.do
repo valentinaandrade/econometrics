@@ -10,6 +10,7 @@
 //	log using "output\log_assignament1.smcl", replace  
 	*Instalar asdoc
 	net install asdoc, from("http://fintechprofessor.com") replace // Para exportar tablas
+	ssc install outreg2 // Tablas a latex
 	net install spost13, from("https://jslsoc.sitehost.iu.edu/stata/") replace // Para lincom multiple
 	set scheme s2color, permanently 	//Tema de graficos
 
@@ -164,7 +165,7 @@ foreach var in n i o {
 ** 3.1  Convergencia incondicional
 foreach var in n i o {
 	regress ln_yl85_60 ln_yl60 if `var' == 1
-	estimates store modelo3.1_`var'
+	estimates store modelo3_1_`var'
 	}
 
 *** Grafico: se puede hacer avplot, scatter pero optamos por forest plot pues nos permite ver tamaño efecto y signifcancia
@@ -248,58 +249,33 @@ foreach var in n i o {
 // Apendice	
 //I ----Tablas
 
-	*TABLA 1:
-	outreg2 [ modelo1 ]  ///
-	using "$latex\tabla1.tex" ///
-	,label /*Las variables del modelo aparecen con etiquetas*/   ///
-	tex(frag) /*Permite ingresar direstamente el archivo generado al tex*/  ///
-	dec(3) /*Agrega 3 decimales*/ ///
-	 adj  /*agrega el r2 ajustado*/  ///
-	replace  ///
-
-
-	*TABLA 2:
-	outreg2 [ modelo1]  ///
-	using "$latex\tabla2.tex" ///
-	,label /*Las variables del modelo aparecen con etiquetas*/   ///
-	tex(frag) /*Permite ingresar direstamente el archivo generado al tex*/  ///
-	dec(3) /*Agrega 3 decimales*/ ///
-	 adj  /*agrega el r2 ajustado*/  ///
-	bracket  /*Genera paréntesis de corchetes*/  ///
-	stats(coef tstat ) /*Nos muestra los betas y los estadígrafos t*/   ///
-	  replace  ///
-	drop(growth) 
-
-
-	*TABLA 3:
-	outreg2 [ modelo1]  ///
-	using "$latex\tabla3.tex" ///
-	,label /*Las variables del modelo aparecen con etiquetas*/   ///
-	tex(frag) /*Permite ingresar direstamente el archivo generado al tex*/  ///
+	*Tablas:
+foreach var in 1 2 3_1 3_2 3_3 3_3robust {
+	outreg2 [ modelo`var'_n modelo`var'_i modelo`var'_o ]  ///
+	using "output/tab/tabla1_`var'.tex", ///
+	label /*Las variables del modelo aparecen con etiquetas*/   ///
+	tex(frag) /*Permite ingresar directamente el archivo generado al tex*/  ///
 	dec(3) /*Agrega 3 decimales*/ ///
 	adj  /*agrega el r2 ajustado*/  ///
-	bracket  /*Genera paréntesis de corchetes*/  ///
+	bracket /*Genera paréntesis de corchetes*/  ///
 	stats(coef tstat ) /*Nos muestra los betas y los estadígrafos t*/   ///
-	replace  ///
-	drop(growth extro_z agree_z cons_z neuro_z open_z  ) ///
-	addtext(Personality Traits, YES)
+	addtext("Note: Run on $S_DATE, using data from $S_FN") /*Produce el texto en la tabla*/  ///
+	replace
+	}
 
-
-
-	*TABLA 4:
-	outreg2 [ modelo1]  ///
-	using "$latex\tabla4.tex" ///
-	,label /*Las variables del modelo aparecen con etiquetas*/   ///
-	tex(frag) /*Permite ingresar direstamente el archivo generado al tex*/  ///
+	*Tablas excel
+foreach var in 1 2 3_1 3_2 3_3 3_3robust {
+	outreg2 [ modelo`var'_n modelo`var'_i modelo`var'_o ]  ///
+	using "output/tab/tabla1_`var'.xls", ///
+	label /*Las variables del modelo aparecen con etiquetas*/   ///
+	tex(frag) /*Permite ingresar directamente el archivo generado al tex*/  ///
 	dec(3) /*Agrega 3 decimales*/ ///
 	adj  /*agrega el r2 ajustado*/  ///
-	bracket  /*Genera paréntesis de corchetes*/  ///
+	bracket /*Genera paréntesis de corchetes*/  ///
 	stats(coef tstat ) /*Nos muestra los betas y los estadígrafos t*/   ///
-	replace  ///
-	drop(s_vida extro_z agree_z cons_z neuro_z open_z  ) ///
-	addtext(Personality Traits, YES) /*Produce el texto en la tabla*/  ///
-	groupvar(  "\textbf{Individuo}"  ing09 edad09 edad09x2  esc09 esc09x2 naver09 /// 
-	"\textbf{Hogar}" hijosh jhogar09 ) 
+	addtext("Note: Run on $S_DATE using data from $S_FN") /*Produce el texto en la tabla*/  ///
+	replace
+	}
 
 	
 

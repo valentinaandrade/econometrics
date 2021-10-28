@@ -1,0 +1,19 @@
+		(1)	(2)	(3)
+		modelo2_n	modelo2_i	modelo2_o
+VARIABLES	LABELS	log PIB por trabajador 1985	log PIB por trabajador 1985	log PIB por trabajador 1985
+				
+ln_yl85	log PIB por trabajador 1985	.	.	.
+		[.]	[.]	[.]
+ln_ngdelta	tasa crecimiento, cambio tecnologico y depreciacion	-0.852**	-0.782**	-0.420
+		[-2.574]	[-2.405]	[-0.973]
+ln_sk	tasa de inversion capital fisico	-0.827***	-0.824***	-0.777***
+		[-10.895]	[-9.298]	[-6.487]
+ln_sh	tasa de acumulacion capital humano	0.429***	0.449***	0.310*
+		[7.083]	[5.395]	[1.755]
+Constant	Constant	-0.998	-0.695	0.606
+		[-0.967]	[-0.602]	[0.364]
+				
+Observations		98	75	22
+Adjusted R-squared		0.874	0.866	0.767
+Note: Run on 28 Oct 2021		using data from input\base_tarea2.dta	using data from input\base_tarea2.dta	using data from input\base_tarea2.dta
+*** p<0.01, ** p<0.05, * p<0.1				

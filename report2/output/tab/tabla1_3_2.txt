@@ -1,0 +1,21 @@
+		(1)	(2)	(3)
+		modelo3_2_n	modelo3_2_i	modelo3_2_o
+VARIABLES	LABELS	ln_yl85_60	ln_yl85_60	ln_yl85_60
+				
+ln_yl85_60	ln_yl85_60	.	.	.
+		[.]	[.]	[.]
+ln_yl60	log PIB por trabajador 1960	-0.543***	-0.604***	-0.588***
+		[-6.185]	[-6.499]	[-4.452]
+ln_ngdelta	tasa crecimiento, cambio tecnologico y depreciacion	-0.524*	-0.547*	-0.720*
+		[-1.750]	[-1.843]	[-1.963]
+ln_sk	tasa de inversion capital fisico	-0.487***	-0.511***	-0.302
+		[-5.207]	[-4.730]	[-1.669]
+ln_sh	tasa de acumulacion capital humano	0.308***	0.324***	0.254*
+		[5.272]	[4.033]	[1.742]
+Constant	Constant	-0.636	-0.385	1.163
+		[-0.695]	[-0.371]	[0.845]
+				
+Observations		98	75	22
+Adjusted R-squared		0.422	0.403	0.636
+Note: Run on 28 Oct 2021		using data from input\base_tarea2.dta	using data from input\base_tarea2.dta	using data from input\base_tarea2.dta
+*** p<0.01, ** p<0.05, * p<0.1				
