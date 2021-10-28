@@ -180,7 +180,6 @@ donde
 
 ## 1.1 Estime la ecuación por MCO para cada submuestra de países. Puede suponer que g + δ= 0.05 (como hacen MRW) y utilizar como variable dependiente el logaritmo del PIB real por trabajador en 1985.
 
-
 ```{r}
 
 ```
