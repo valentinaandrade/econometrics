@@ -2,7 +2,7 @@
 // 		Tarea N°2
 //      Econometria I - PUC
 // 		Author: Valentina Andrade
-//		Last update: 13-09-2021
+//		Last update: 27-09-2021
 //===========================================================================//
 //  0. Preliminars
 	clear all
@@ -11,7 +11,7 @@
 	*Instalar asdoc
 	net install asdoc, from("http://fintechprofessor.com") replace // Para exportar tablas
 	ssc install outreg2 // Tablas a latex
-	net install spost13, from("https://jslsoc.sitehost.iu.edu/stata/") replace // Para lincom multiple
+**	net install spost13, from("https://jslsoc.sitehost.iu.edu/stata/") replace // Para lincom multiple
 	set scheme s2color, permanently 	//Tema de graficos
 
 	
@@ -35,7 +35,7 @@
 	gen ln_yl60 = log(rgdpw60)
 	gen i_n = i_y/100
     gen pop_n = popgrowth/100
-	gen ln_sk = log(i_n/rgdpw85)
+	gen ln_sk = log(i_n)
 	gen ln_ngdelta = log(pop_n + 0.05)
 // Para pregunta N°2
 	gen school_n = school/100 
