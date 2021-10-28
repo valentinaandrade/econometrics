@@ -1,0 +1,16 @@
+	(1)
+VARIABLES	ln_yl85_60
+	
+ln_yl85_60	
+ln_yl60	-0.327 0.0510
+ln_ngdelta	-0.336 0.243
+ln_sk	1.203 0.299
+ln_sh	0.632 0.170
+o.ln_sk	0 0
+o.ln_sh	0 0
+c.ln_sk#c.ln_sh	0.190 0.0774
+Constant	5.128 1.063
+	
+Observations	98
+R-squared	0.514
+Robust standard errors in parentheses	
