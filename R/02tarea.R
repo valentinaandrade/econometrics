@@ -70,7 +70,7 @@ data2 <- data %>%
 
 
 
-modelo0 <- lm(ln_yl85 ~ ln_sk + ln_ngdelta, data = data2)
+modelo0 <- lm(log(rgdpw85) ~ log(i_n/ rgdpw85) + log(pop_n + 0.05), data = data2)
 summary(modelo0)
 
 # Modelo 1 - non oil ------------------------------------------------------
@@ -80,5 +80,17 @@ summary(modelo1_n)
 modelo1_i <- lm(ln_yl85 ~ ln_sk + ln_ngdelta, data = data, subset = (i == 1))
 summary(modelo1_i)
 # Modelo 1 - OECD ---------------------------------------------------------
-modelo1_o <- lm(ln_yl85 ~ ln_sk + ln_ngdelta, data = data)
+modelo1_o <- lm(ln_yl85 ~ ln_sk + ln_ngdelta, data = data, subset = (o == 1))
 summary(modelo1_o)
+
+# II. Interpretar ---------------------------------------------------------
+## Interprete los coeficientes estimados para las tres submuestras. ¿Son los coeficientes
+##individualmente significativos al 5%? ¿Explican la inversión y el crecimiento de la
+##población una parte importante de la variación en el producto por trabajador?
+
+
+# Hipotesis ---------------------------------------------------------------
+# Contraste la hipótesis de que los coeficientes son iguales en magnitud pero de distinto
+# signo (como predice el modelo) para cada una de las submuestras (H0: β1 + β2 = 0).
+# ¿Puede rechazar la hipótesis nula al 5%?
+
