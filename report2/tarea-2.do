@@ -59,9 +59,9 @@
 ** Nuevas **
 	label var ln_yl85 "log PIB por trabajador 1985"
 	label var ln_yl60 "log PIB por trabajador 1960"
-	label var ln_sk "tasa de inversion capital fisico"
-	label var ln_sh "tasa de acumulacion capital humano"
-	label var ln_ngdelta "tasa crecimiento, cambio tecnologico y depreciacion"
+	label var ln_sk "Inversion capital fisico"
+	label var ln_sh "Acumulacion capital humano"
+	label var ln_ngdelta "Crecimiento, cambio tecnologico y depreciacion"
 	label var ln_yl85_60  "log PIB por trabajador inicial-final"
 		
 	
