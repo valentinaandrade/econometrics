@@ -257,13 +257,12 @@ foreach var in 1 2 3_1 3_2 3_3 3_3robust {
 	tex(frag) /*Permite ingresar directamente el archivo generado al tex*/  ///
 	dec(3) /*Agrega 3 decimales*/ ///
 	adj  /*agrega el r2 ajustado*/  ///
-	bracket /*Genera paréntesis de corchetes*/  ///
-	stats(coef tstat ) /*Nos muestra los betas y los estadígrafos t*/   ///
 	addtext("Note: Run on $S_DATE, using data from $S_FN") /*Produce el texto en la tabla*/  ///
 	replace
 	}
 
 	*Tablas excel
+
 foreach var in 1 2 3_1 3_2 3_3 3_3robust {
 	outreg2 [ modelo`var'_n modelo`var'_i modelo`var'_o ]  ///
 	using "output/tab/tabla1_`var'.xls", ///
@@ -272,11 +271,10 @@ foreach var in 1 2 3_1 3_2 3_3 3_3robust {
 	dec(3) /*Agrega 3 decimales*/ ///
 	adj  /*agrega el r2 ajustado*/  ///
 	bracket /*Genera paréntesis de corchetes*/  ///
-	stats(coef tstat ) /*Nos muestra los betas y los estadígrafos t*/   ///
 	addtext("Note: Run on $S_DATE using data from $S_FN") /*Produce el texto en la tabla*/  ///
 	replace
 	}
-
+	
 	
 
 log close
