@@ -19,7 +19,7 @@
 	global data_row = "C:\Users\Valentina Andrade\Documents\GitHub\master\econometrics"
 	global data_prepared "C:\Users\Valentina Andrade\Documents\GitHub\master\econometrics\input"
 	global latex = "C:\Users\Valentina Andrade\Documents\GitHub\master\econometrics\ouput"
-	cd "C:\Users\Valentina Andrade\Documents\GitHub\master\econometrics"
+	cd "C:\Users\Valentina Andrade\Documents\GitHub\master\econometrics\reporte2"
 	
 
 // b. Leer datos
@@ -43,6 +43,7 @@
 	
 // Para pregunta N°3
 	gen ln_yl85_60 = ln_yl85 - ln_yl60
+	gen lnsh_sk = ln_sh*ln_sk
 
 // c. Etiquetar
 	* Se hace para las tablas en latex despues
@@ -234,13 +235,13 @@ foreach var in n i o {
 	graph export "output/figure-plot-modelo3_3robust_`var'.jpg"
 }
 
-*Nota: seguro que avplot??*
+*Nota: seguro que avplot: no es para residuos
 
 *Adicionales ?
 foreach var in n i o {
 	estimates restore modelo3_3robust_`var'
-	rvpplot c.ln_sk##c.ln_sh, recast(scatter)
-	graph export "output/figure-plot-modelo3_3robust_residual_`var'.jpg"
+	rvpplot lnsh_sk, recast(scatter) addplot((lfitci ln_yl85_60 lnsh_sk)) ytitle(Residuos) xtitle(Interacción capital físico y humano) clegend(on)
+	graph export "output/graph-2/figure-plot-modelo3_3robust_residual_`var'.jpg"
 }
 
 ** Interactions not allowed
