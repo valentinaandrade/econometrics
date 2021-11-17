@@ -3,8 +3,6 @@
 // Econometria - PUC
 clear all
 
-cd "C:\Users\Valentina Andrade\Documents\GitHub\master\econometrics"
-
 // a.  Crear objetos
 set obs 10000
 set seed 123
@@ -31,15 +29,16 @@ gen x1 = 4*z + rnormal() + x2
 gen y  = 2*x1 + 3*x2 + u
 
 // d. Regresiones
-** d.1 Larga
+** d.1 Modelo real
 reg y x1 x2
 
-** d.2 Varible omitida
+** d.2 Modelo con varible omitida
 reg y x1
 
 // e. Instrumento
+*** Veremos el cumplimiento de propiedades
 
-** e. Exclusion
+** e.1 Exclusion
 ***(esto no se puede en la realidad pues no tengo u. En este caso si)
 
 reg u z 
